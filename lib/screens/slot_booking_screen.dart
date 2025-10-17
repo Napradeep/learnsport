@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sportspark/screens/payment_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:sportspark/utils/router/router.dart';
+import 'package:sportspark/utils/snackbar/snackbar.dart';
 
 class SlotBookingScreen extends StatefulWidget {
   final String turfName;
@@ -10,29 +13,24 @@ class SlotBookingScreen extends StatefulWidget {
   State<SlotBookingScreen> createState() => _SlotBookingScreenState();
 }
 
-class _SlotBookingScreenState extends State<SlotBookingScreen>
-    with TickerProviderStateMixin {
+class _SlotBookingScreenState extends State<SlotBookingScreen> {
   DateTime? _selectedDate;
-  late AnimationController _controller;
-  late Animation<Offset> _animation;
+  final Set<String> _selectedSlots = {};
+  final Set<String> _bookedSlots = {'10AM - 11AM', '18PM - 19PM'};
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    )..forward();
-    _animation = Tween<Offset>(
-      begin: const Offset(1, 0),
-      end: Offset.zero,
-    ).animate(_controller);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  List<String> _generateSlots24() {
+    List<String> slots = [];
+    for (int h = 0; h < 24; h++) {
+      final period = h >= 12 ? 'PM' : 'AM';
+      final hour = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+      final nextHour = (h + 1) % 24;
+      final nextPeriod = nextHour >= 12 ? 'PM' : 'AM';
+      final nextHourFormatted = nextHour == 0
+          ? 12
+          : (nextHour > 12 ? nextHour - 12 : nextHour);
+      slots.add('$hour$period - $nextHourFormatted$nextPeriod');
+    }
+    return slots;
   }
 
   Future<void> _pickDate() async {
@@ -59,240 +57,212 @@ class _SlotBookingScreenState extends State<SlotBookingScreen>
     }
   }
 
+  void _toggleSlot(String slot) {
+    if (_selectedDate == null) {
+      Messenger.alertError("Please select a date first");
+      return;
+    }
+
+    if (_bookedSlots.contains(slot)) {
+      Messenger.alertError("Slot $slot is already booked");
+
+      return;
+    }
+
+    setState(() {
+      if (_selectedSlots.contains(slot)) {
+        _selectedSlots.remove(slot);
+      } else {
+        _selectedSlots.add(slot);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.bluePrimaryDual,
-          primary: AppColors.bluePrimaryDual,
-          secondary: AppColors.iconLightColor,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.bluePrimaryDual,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: true,
+    final allSlots = _generateSlots24();
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.bluePrimaryDual,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          widget.turfName,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
       ),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Slot Booking',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Card(
+              elevation: 4,
               color: Colors.white,
-            ),
-          ),
-          // actions: [
-          //   IconButton(
-          //     icon: const Icon(Icons.calendar_today, color: Colors.white),
-          //     onPressed: _pickDate,
-          //   ),
-          // ],
-        ),
-        body: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.all(16.0),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
                   children: [
-                    Text(
-                      widget.turfName,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.iconColor,
-                      ),
+                    Icon(
+                      Icons.date_range,
+                      color: AppColors.iconColor,
+                      size: 28,
                     ),
-                    SizedBox(height: 10),
-
-                    Card(
-                      elevation: 4,
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.date_range,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Select Date',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                               color: AppColors.iconColor,
-                              size: 28,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Select Date',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.iconColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ElevatedButton.icon(
-                                    onPressed: _pickDate,
-                                    icon: const Icon(
-                                      Icons.calendar_month,
-                                      size: 20,
-                                    ),
-                                    label: Text(
-                                      _selectedDate == null
-                                          ? 'Choose a date'
-                                          : '${_selectedDate!.day}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}',
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          AppColors.bluePrimaryDual,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            onPressed: _pickDate,
+                            icon: const Icon(Icons.calendar_month, size: 20),
+                            label: Text(
+                              _selectedDate == null
+                                  ? 'Choose Date'
+                                  : '${_selectedDate!.day}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}',
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.bluePrimaryDual,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Available Time Slots',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.iconColor,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              sliver: SliverToBoxAdapter(
-                child: SlideTransition(
-                  position: _animation,
-                  child: Column(
-                    children: [
-                      ...List.generate(6, (index) {
-                        final times = [
-                          '6am - 7am',
-                          '7am - 8am',
-                          '8am - 9am',
-                          '9am - 10am',
-                          '10am - 11am',
-                          '11am - 12pm',
-                        ];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: Card(
-                            elevation: 3,
-                            color: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 24),
+
+            Expanded(
+              child: GridView.builder(
+                itemCount: allSlots.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 2,
+                ),
+                itemBuilder: (context, index) {
+                  final slot = allSlots[index];
+                  final isSelected = _selectedSlots.contains(slot);
+                  final isBooked = _bookedSlots.contains(slot);
+
+                  return GestureDetector(
+                    onTap: () => _toggleSlot(slot),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [
+                                  AppColors.bluePrimaryDual,
+                                  Colors.lightBlueAccent,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        color: isBooked ? Colors.grey.shade400 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          if (!isBooked)
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () {}, // Optional tap for selection
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.iconLightColor
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        Icons.access_time,
-                                        color: AppColors.iconLightColor,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            times[index],
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.iconColor,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Available',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.green,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () => Navigator.pushNamed(
-                                        context,
-                                        '/payment',
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            AppColors.bluePrimaryDual,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 24,
-                                          vertical: 12,
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'Book Now',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
+                        ],
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.bluePrimaryDual
+                              : isBooked
+                              ? Colors.grey.shade400
+                              : Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Text(
+                        slot.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isBooked
+                              ? Colors.white70
+                              : (isSelected
+                                    ? Colors.white
+                                    : AppColors.iconColor),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_selectedDate == null) {
+                    Messenger.alertError("Please select a date first");
+
+                    return;
+                  }
+                  if (_selectedSlots.isEmpty) {
+                    Messenger.alertError("Please choose at least one timeslot");
+                    return;
+                  }
+
+                  MyRouter.push(
+                    screen: PaymentScreen(
+                      userSlectedgame: widget.turfName,
+                      selectedDate: _selectedDate!,
+                      selectedSlots: _selectedSlots.toList(),
+                      timeSlot: _selectedSlots.join(", "),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      _selectedDate != null && _selectedSlots.isNotEmpty
+                      ? AppColors.bluePrimaryDual
+                      : Colors.grey.shade400,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                ),
+                child: const Text(
+                  'Next',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 100),
-            ), // For scroll padding
           ],
         ),
       ),

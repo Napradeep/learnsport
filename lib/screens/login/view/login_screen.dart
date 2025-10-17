@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sportspark/screens/home_screen.dart';
 import 'package:sportspark/screens/login/model/login_request.dart';
 import 'package:sportspark/screens/login/provider/auth_provider.dart';
+import 'package:sportspark/screens/login/view/forget_pass.dart';
 import 'package:sportspark/screens/login/view/regestration_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
@@ -42,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await Provider.of<AuthProvider>(
       context,
       listen: false,
-    ).login(request, 'user'); // Role fixed as user for now
+    ).login(request, 'user');
 
     setState(() => _isLoading = false);
 
@@ -59,6 +60,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        centerTitle: false,
+        title: Text("Login Screen"),
+        backgroundColor: AppColors.bluePrimaryDual,
+        foregroundColor: Colors.white,
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -82,8 +89,11 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(height: 10),
-                  Text(
+                  // 🔹 Logo
+                  Image.asset('assets/applogo.png', height: 100),
+                  const SizedBox(height: 16),
+
+                  const Text(
                     "Welcome Back 👋",
                     style: TextStyle(
                       fontSize: 26,
@@ -132,7 +142,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 30),
+
+                  // 🔹 Forgot Password
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        // Navigate to Forgot Password Screen
+                        MyRouter.push(screen: const ForgotPasswordScreen());
+                      },
+                      child: const Text(
+                        "Forgot Password?",
+                        style: TextStyle(
+                          color: AppColors.bluePrimaryDual,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
                   /// 🔘 Login Button
                   SizedBox(

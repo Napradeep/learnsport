@@ -150,6 +150,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen>
       ),
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: false,
           title: const Text(
             'Booking History',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),

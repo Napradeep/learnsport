@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sportspark/utils/const/const.dart'; // Assuming this is where AppColors is defined or move it there
 import 'package:video_player/video_player.dart';
+import 'package:sportspark/utils/const/const.dart';
 
-// Sample data structure for images and videos grouped by date
-// Using network URLs instead of assets
 final Map<String, List<String>> _imageData = {
   '05/10/2025': [
     'https://pbs.twimg.com/media/G2iRFXnXMAA5gG4.jpg',
@@ -11,15 +9,13 @@ final Map<String, List<String>> _imageData = {
     'https://pbs.twimg.com/media/G2iQxHLa0AAr6hh.jpg',
     'https://pbs.twimg.com/media/G2iQ99KW8AA4yHp.jpg',
     'https://pbs.twimg.com/media/G2iQ3wsWMAAM8Ca.jpg',
-    'https://pbs.twimg.com/media/G2iQ3WaWwAA8D-a.jpg',
   ],
   '04/10/2025': [
     'https://pbs.twimg.com/media/G2dHem3XwAAP2eD.jpg',
     'https://pbs.twimg.com/media/G2dHRH4WYAAhp2I.jpg',
     'https://pbs.twimg.com/media/G2dHeOTXgAA4VwL.jpg',
     'https://pbs.twimg.com/media/G2dHeXZWQAApKSS.jpg',
-    'https://pbs.twimg.com/media/G2dHCVFWcAANKid.jpg',
-    'https://pbs.twimg.com/media/G2dHCVCWkAAlIe_.jpg',
+    'https://pbs.twimg.com/media/G2iRFXnXMAA5gG4.jpg',
   ],
 };
 
@@ -29,21 +25,17 @@ final Map<String, List<String>> _videoData = {
     'https://video.twimg.com/amplify_video/1974987732007960576/vid/avc1/582x270/eeCuZZC0cM7fleV4.mp4',
     'https://video.twimg.com/amplify_video/1974987406454493184/vid/avc1/320x568/N4kBf4ri9QufGKmy.mp4',
     'https://video.twimg.com/amplify_video/1974986799802966016/vid/avc1/320x446/vq8WGwyVWgzfg1l3.mp4',
-    'https://video.twimg.com/amplify_video/1974986329998909440/vid/avc1/360x270/qdBN_tlfIr7Kf9sw.mp4',
   ],
   '04/10/2025': [
     'https://video.twimg.com/amplify_video/1974625404334813184/vid/avc1/320x568/v9LCe9GjCbYwxkdM.mp4',
     'https://video.twimg.com/amplify_video/1974624883272216576/vid/avc1/320x568/gSyvYXMoyctJ_Blk.mp4',
-    'https://video.twimg.com/amplify_video/1974625150633926656/vid/avc1/320x400/Pcy8qe8DY-027aXH.mp4?tag=16',
     'https://video.twimg.com/amplify_video/1974622938667143168/vid/avc1/480x270/li6OjqwDOq3TkyPF.mp4',
-    'https://video.twimg.com/amplify_video/1974625067263770624/vid/avc1/480x270/jOT4f1ol6aWn0VGm.mp4?tag=16',
   ],
-  // Add more dates as needed
 };
 
 class SportDetailScreen extends StatefulWidget {
   final String title;
-  final String imagePath; // Optional hero tag from previous screen
+  final String imagePath;
 
   const SportDetailScreen({
     super.key,
@@ -95,7 +87,7 @@ class _SportDetailScreenState extends State<SportDetailScreen>
             child: TabBar(
               controller: _tabController,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.white.withOpacity(0.7),
+              unselectedLabelColor: Colors.white70,
               indicatorColor: Colors.white,
               indicatorWeight: 3,
               tabs: const [
@@ -123,12 +115,11 @@ class _SportDetailScreenState extends State<SportDetailScreen>
     required bool isVideo,
   }) {
     final dates = data.keys.toList()
-      ..sort(
-        (a, b) => _parseDate(b).compareTo(_parseDate(a)),
-      ); // Sort descending
+      ..sort((a, b) => _parseDate(b).compareTo(_parseDate(a)));
+
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(12),
       itemCount: dates.length,
       itemBuilder: (context, index) {
         final date = dates[index];
@@ -136,96 +127,15 @@ class _SportDetailScreenState extends State<SportDetailScreen>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to full list for this date
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => _FullMediaListScreen(
-                          title: '$date - ${isVideo ? 'Videos' : 'Images'}',
-                          items: items,
-                          isVideo: isVideo,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    'See All >>',
-                    style: TextStyle(
-                      color: AppColors.bluePrimaryDual,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _buildDateHeader(date, items, isVideo),
             const SizedBox(height: 8),
             SizedBox(
-              height: 120, // Adjust based on thumbnail size
+              height: 120,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: items.length > 4
-                    ? 4
-                    : items.length, // Show up to 4 thumbnails
-                itemBuilder: (context, idx) {
-                  final item = items[idx];
-                  return GestureDetector(
-                    onTap: () {
-                      // Open full view
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          transitionDuration: const Duration(milliseconds: 600),
-                          pageBuilder: (_, __, ___) => _FullMediaView(
-                            path: item,
-                            title: '${widget.title} - ${date}',
-                            isVideo: isVideo,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: SizedBox(
-                          width: 120,
-                          child: isVideo
-                              ? Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Image.network(
-                                      'https://via.placeholder.com/120x120?text=Video+Thumb', // Use a real thumbnail service or placeholder
-                                      fit: BoxFit.cover,
-                                    ),
-                                    const Center(
-                                      child: Icon(
-                                        Icons.play_circle_outline,
-                                        color: Colors.white,
-                                        size: 40,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Image.network(item, fit: BoxFit.cover),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                itemCount: items.length > 4 ? 4 : items.length,
+                itemBuilder: (context, idx) =>
+                    _buildThumbnail(items[idx], items, idx, date, isVideo),
               ),
             ),
             const SizedBox(height: 16),
@@ -235,13 +145,116 @@ class _SportDetailScreenState extends State<SportDetailScreen>
     );
   }
 
-  DateTime _parseDate(String dateStr) {
-    final parts = dateStr.split('/');
-    return DateTime(
-      int.parse(parts[2]),
-      int.parse(parts[1]),
-      int.parse(parts[0]),
+  Widget _buildDateHeader(String date, List<String> items, bool isVideo) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          date,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => _FullMediaListScreen(
+                  title: '$date - ${isVideo ? 'Videos' : 'Images'}',
+                  items: items,
+                  isVideo: isVideo,
+                ),
+              ),
+            );
+          },
+          child: Text(
+            'See All >>',
+            style: TextStyle(
+              color: AppColors.bluePrimaryDual,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
+  }
+
+  Widget _buildThumbnail(
+    String item,
+    List<String> items,
+    int idx,
+    String date,
+    bool isVideo,
+  ) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 400),
+          pageBuilder: (_, __, ___) => _FullMediaView(
+            items: items,
+            initialIndex: idx,
+            title: '${widget.title} - $date',
+            isVideo: isVideo,
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: 120,
+            child: isVideo
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(color: Colors.black26),
+                      const Center(
+                        child: Icon(
+                          Icons.play_circle_fill,
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                      ),
+                    ],
+                  )
+                : Image.network(
+                    item,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey.shade300,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey.shade200,
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: Colors.grey,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  DateTime _parseDate(String dateStr) {
+    final p = dateStr.split('/');
+    return DateTime(int.parse(p[2]), int.parse(p[1]), int.parse(p[0]));
   }
 }
 
@@ -273,65 +286,81 @@ class _FullMediaListScreen extends StatelessWidget {
       ),
       body: GridView.builder(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(12),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1,
         ),
         itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  transitionDuration: const Duration(milliseconds: 600),
-                  pageBuilder: (_, __, ___) => _FullMediaView(
-                    path: item,
-                    title: title,
-                    isVideo: isVideo,
-                  ),
-                ),
-              );
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: isVideo
-                  ? Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          'https://via.placeholder.com/120x120?text=Video+Thumb',
-                          fit: BoxFit.cover,
+        itemBuilder: (context, i) => GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => _FullMediaView(
+                items: items,
+                initialIndex: i,
+                title: title,
+                isVideo: isVideo,
+              ),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: isVideo
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(color: Colors.black26),
+                      const Center(
+                        child: Icon(
+                          Icons.play_circle_fill,
+                          color: Colors.white,
+                          size: 50,
                         ),
-                        const Center(
-                          child: Icon(
-                            Icons.play_circle_outline,
-                            color: Colors.white,
-                            size: 40,
+                      ),
+                    ],
+                  )
+                : Image.network(
+                    items[i],
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey.shade300,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.blueAccent,
                           ),
                         ),
-                      ],
-                    )
-                  : Image.network(item, fit: BoxFit.cover),
-            ),
-          );
-        },
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey.shade200,
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: Colors.grey,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+          ),
+        ),
       ),
     );
   }
 }
 
 class _FullMediaView extends StatefulWidget {
-  final String path;
+  final List<String> items;
+  final int initialIndex;
   final String title;
   final bool isVideo;
 
   const _FullMediaView({
-    required this.path,
+    required this.items,
+    required this.initialIndex,
     required this.title,
     required this.isVideo,
   });
@@ -341,24 +370,33 @@ class _FullMediaView extends StatefulWidget {
 }
 
 class _FullMediaViewState extends State<_FullMediaView> {
-  VideoPlayerController? _controller;
+  late PageController _pageController;
+  VideoPlayerController? _videoController;
+  int _currentIndex = 0;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.isVideo) {
-      _controller = VideoPlayerController.network(widget.path)
-        ..initialize().then((_) {
-          // Ensure the first frame is shown after initialization
-          setState(() {});
-          _controller!.play();
-        });
-    }
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
+    _initializeVideo(widget.items[_currentIndex]);
+  }
+
+  void _initializeVideo(String url) async {
+    if (!widget.isVideo) return;
+    setState(() => _isLoading = true);
+    _videoController?.dispose();
+    _videoController = VideoPlayerController.networkUrl(Uri.parse(url));
+    await _videoController!.initialize();
+    _videoController!.play();
+    setState(() => _isLoading = false);
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _videoController?.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -371,43 +409,83 @@ class _FullMediaViewState extends State<_FullMediaView> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          widget.title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          '${widget.title} (${_currentIndex + 1}/${widget.items.length})',
+          style: const TextStyle(color: Colors.white),
         ),
       ),
-      body: Center(
-        child: widget.isVideo
-            ? _controller != null && _controller!.value.isInitialized
-                  ? AspectRatio(
-                      aspectRatio: _controller!.value.aspectRatio,
-                      child: VideoPlayer(_controller!),
-                    )
-                  : const CircularProgressIndicator()
-            : InteractiveViewer(
-                clipBehavior: Clip.none,
-                child: Image.network(widget.path, fit: BoxFit.contain),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.items.length,
+        onPageChanged: (i) {
+          setState(() => _currentIndex = i);
+          if (widget.isVideo) _initializeVideo(widget.items[i]);
+        },
+        itemBuilder: (context, i) {
+          final item = widget.items[i];
+          if (widget.isVideo) {
+            if (_isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
+            }
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                AspectRatio(
+                  aspectRatio: _videoController!.value.aspectRatio,
+                  child: VideoPlayer(_videoController!),
+                ),
+                Positioned(
+                  bottom: 30,
+                  left: 0,
+                  right: 0,
+                  child: VideoProgressIndicator(
+                    _videoController!,
+                    allowScrubbing: true,
+                    colors: const VideoProgressColors(
+                      playedColor: Colors.blue,
+                      bufferedColor: Colors.blueGrey,
+                      backgroundColor: Colors.grey,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _videoController!.value.isPlaying
+                          ? _videoController!.pause()
+                          : _videoController!.play();
+                    });
+                  },
+                  child: Icon(
+                    _videoController!.value.isPlaying
+                        ? Icons.pause_circle
+                        : Icons.play_circle_fill,
+                    color: Colors.white,
+                    size: 70,
+                  ),
+                ),
+              ],
+            );
+          } else {
+            return InteractiveViewer(
+              child: Image.network(
+                item,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) => const Center(
+                  child: Icon(Icons.broken_image, color: Colors.grey, size: 80),
+                ),
               ),
+            );
+          }
+        },
       ),
     );
   }
 }
-
-// Update the original GalleryScreen to navigate to SportDetailScreen instead of _FullImageView
-// In the GestureDetector onTap:
-
-// Navigator.push(
-//   context,
-//   PageRouteBuilder(
-//     transitionDuration: const Duration(milliseconds: 600),
-//     pageBuilder: (_, __, ___) => SportDetailScreen(
-//       imagePath: item['image']!,
-//       title: item['name']!,
-//     ),
-//   ),
-// );
-
-// Note: For better performance, consider adding 'cached_network_image' package for images.
-// For video thumbnails, you can use a library like 'video_thumbnail' to generate thumbs from video URLs.

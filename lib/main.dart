@@ -7,7 +7,6 @@ import 'package:sportspark/screens/details_screen.dart';
 import 'package:sportspark/screens/gallery_screen.dart';
 import 'package:sportspark/screens/home_screen.dart';
 import 'package:sportspark/screens/login/provider/auth_provider.dart';
-import 'package:sportspark/screens/payment_screen.dart';
 import 'package:sportspark/screens/slot_booking_screen.dart';
 import 'package:sportspark/screens/sports_game.dart';
 import 'package:sportspark/utils/router/router.dart';
@@ -46,7 +45,6 @@ class MyApp extends StatelessWidget {
         '/slot_booking': (context) => SlotBookingScreen(
           turfName: ModalRoute.of(context)!.settings.arguments as String,
         ),
-        '/payment': (context) => const PaymentScreen(),
         '/about_us': (context) => const AboutUsScreen(),
         '/sport_game': (context) => const SportsGame(),
         '/gallery': (context) => const GalleryScreen(),

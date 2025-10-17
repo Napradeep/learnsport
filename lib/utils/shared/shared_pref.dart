@@ -5,7 +5,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sportspark/screens/login/model/user_model.dart';
-import 'package:sportspark/screens/login/view/ogin_screen.dart';
+import 'package:sportspark/screens/login/view/login_screen.dart';
 import 'package:sportspark/utils/router/router.dart';
 
 class UserPreferences {
@@ -81,9 +81,9 @@ class UserPreferences {
 
   /// Logout and navigate to login
   static Future<void> logout(BuildContext context) async {
-    await clearUser();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    // await clearUser();
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.clear();
 
     MyRouter.pushRemoveUntil(screen: LoginScreen());
   }

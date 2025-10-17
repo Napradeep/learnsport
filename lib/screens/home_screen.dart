@@ -1,7 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:sportspark/screens/details_screen.dart';
+import 'package:sportspark/screens/login/view/login_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/widget/drawer_menu.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -99,9 +101,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         appBar: AppBar(
           elevation: 4,
           shadowColor: Colors.black26,
-
           centerTitle: false,
-
           titleSpacing: 0,
           leading: Builder(
             builder: (context) => IconButton(
@@ -110,7 +110,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               tooltip: 'Menu',
             ),
           ),
-
           title: const Text(
             'LearnFort Sports Park',
             style: TextStyle(
@@ -120,24 +119,53 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               letterSpacing: 0.5,
             ),
           ),
+          actions: [
+            // Login text button
+            GestureDetector(
+              onTap: () {
+                MyRouter.push(screen: const LoginScreen());
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.bluePrimaryDual,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
 
         drawer: const DrawerMenu(),
         body: CustomScrollView(
           slivers: [
-            /// 🔹 Banner Section
             SliverToBoxAdapter(
               child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.all(3),
                   child: CarouselSlider(
                     options: CarouselOptions(
                       height: 210,
                       autoPlay: true,
                       autoPlayInterval: const Duration(seconds: 3),
-                      enlargeCenterPage: true,
-                      viewportFraction: 0.9,
+                      enlargeCenterPage: false,
+                      viewportFraction: 1.0,
                       enableInfiniteScroll: true,
                       scrollPhysics: const BouncingScrollPhysics(),
                     ),
@@ -155,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           );
                         },
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.zero,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [

@@ -1,14 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});
 
+  final double latitude = 10.168391;
+  final double longitude = 77.8158151;
+
+  Future<void> _openGoogleMaps() async {
+    final String mapsUrl =
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+
+    try {
+      if (await canLaunchUrlString(mapsUrl)) {
+        await launchUrlString(mapsUrl, mode: LaunchMode.externalApplication);
+      } else {
+        debugPrint('Could not launch Maps URL');
+      }
+    } catch (e) {
+      debugPrint('Error launching maps: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final LatLng location = LatLng(latitude, longitude);
+
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'About Us',
           style: TextStyle(
@@ -17,7 +40,6 @@ class AboutUsScreen extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-
         backgroundColor: AppColors.bluePrimaryDual,
         elevation: 4,
         shadowColor: Colors.black26,
@@ -26,6 +48,7 @@ class AboutUsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // HEADER
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -35,13 +58,10 @@ class AboutUsScreen extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
               ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 30.0,
-              ),
-              child: Column(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     "LearnFort Sports Park",
                     style: TextStyle(
@@ -62,6 +82,7 @@ class AboutUsScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            // ABOUT SECTION
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -79,6 +100,7 @@ class AboutUsScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            // SPORTS SECTION
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -116,6 +138,7 @@ class AboutUsScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
+            // AMENITIES SECTION
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -147,6 +170,78 @@ class AboutUsScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
+            // MAP SECTION
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "📍 Location:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: AppColors.iconColor,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: GestureDetector(
+                      onTap: _openGoogleMaps,
+                      child: SizedBox(
+                        height: 200,
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter: location,
+                            initialZoom: 16,
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.none,
+                            ),
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.example.sportspark',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: location,
+                                  width: 40,
+                                  height: 40,
+                                  child: IconButton(
+                                    onPressed: _openGoogleMaps,
+                                    icon: Icon(
+                                      Icons.location_on,
+                                      color: Colors.redAccent,
+                                      size: 40,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: _openGoogleMaps,
+                    child: const Text(
+                      "Tap the map to navigate in Google Maps",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // CONTACT SECTION
             Container(
               width: double.infinity,
               color: AppColors.iconColor.withOpacity(0.1),
@@ -154,9 +249,9 @@ class AboutUsScreen extends StatelessWidget {
                 horizontal: 20.0,
                 vertical: 25.0,
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     "📞 Contact Us",
                     style: TextStyle(
@@ -167,7 +262,10 @@ class AboutUsScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "LearnFort Sports Park\nDindigul, Tamil Nadu\nPhone: +91 98765 43210\nEmail: info@learnfortsports.com",
+                    "LearnFort Sports Park\n"
+                    "Bangalapatti, Dindigul, Tamil Nadu 624202\n"
+                    "Phone: +91 98765 43210\n"
+                    "Email: info@learnfortsports.com",
                     style: TextStyle(fontSize: 16, height: 1.5),
                   ),
                 ],
@@ -182,6 +280,7 @@ class AboutUsScreen extends StatelessWidget {
   }
 }
 
+// SPORT CHIP
 class _SportChip extends StatelessWidget {
   final String label;
   const _SportChip(this.label);
@@ -197,6 +296,7 @@ class _SportChip extends StatelessWidget {
   }
 }
 
+// FACILITY TEXT
 class _FacilityText extends StatelessWidget {
   final String text;
   const _FacilityText(this.text);

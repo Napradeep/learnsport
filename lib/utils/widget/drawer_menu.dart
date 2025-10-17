@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sportspark/screens/login/view/login_screen.dart';
+import 'package:sportspark/screens/sports_list.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:sportspark/utils/router/router.dart';
 
 class DrawerMenu extends StatelessWidget {
   const DrawerMenu({super.key});
@@ -26,14 +29,10 @@ class DrawerMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.sports_soccer,
-                      size: 40,
-                      color: AppColors.iconColor,
-                    ),
+                    child: Image.asset("assets/applogo.png"),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -45,7 +44,7 @@ class DrawerMenu extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Your Sports Companion',
+                    'an unit of Eshvar Edu Foundation',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -69,11 +68,7 @@ class DrawerMenu extends StatelessWidget {
               title: 'Book Slot',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(
-                  context,
-                  '/slot_booking',
-                  arguments: 'General',
-                );
+                MyRouter.push(screen: SportsList());
               },
             ),
             _buildDrawerItem(
@@ -124,7 +119,7 @@ class DrawerMenu extends StatelessWidget {
               color: AppColors.iconRed,
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/');
+                MyRouter.pushRemoveUntil(screen: LoginScreen());
               },
             ),
           ],

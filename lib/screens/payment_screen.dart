@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sportspark/screens/home_screen.dart';
+import 'package:sportspark/screens/payment_deatils.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
-import 'package:sportspark/utils/snackbar/snackbar.dart';
+import 'package:sportspark/utils/validator/validator.dart';
 import 'package:sportspark/utils/widget/custom_button.dart';
 import 'package:sportspark/utils/widget/custom_text_field.dart';
 
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+  final String userSlectedgame;
+  final DateTime selectedDate;
+  final String timeSlot;
+  final List<String> selectedSlots;
+
+  const PaymentScreen({
+    super.key,
+    required this.userSlectedgame,
+    required this.selectedDate,
+    required this.timeSlot,
+    required this.selectedSlots,
+  });
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -21,17 +32,21 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final TextEditingController _fatherNameController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final _aadharNumberController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  final _nativePlaceController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
     _fatherNameController.dispose();
+    _nativePlaceController.dispose();
     _mobileController.dispose();
     _emailController.dispose();
     _addressController.dispose();
-    _descriptionController.dispose();
+    _aadharNumberController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -70,7 +85,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ),
         ),
-
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -118,9 +132,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   // Form Card
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -201,6 +213,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                         const SizedBox(height: 16),
                         MyTextFormFieldBox(
+                          controller: _aadharNumberController,
+                          labelText: 'Aadhar Number',
+                          keyboardType: TextInputType.number,
+                          icon: const Icon(
+                            Icons.credit_card,
+                            color: AppColors.iconLightColor,
+                          ),
+                          validator: InputValidator.validateAadhar,
+                        ),
+                        const SizedBox(height: 16),
+                        MyTextFormFieldBox(
                           controller: _addressController,
                           labelText: 'Address',
                           hinttext: 'Enter your address',
@@ -214,9 +237,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                         const SizedBox(height: 16),
                         MyTextFormFieldBox(
-                          controller: _descriptionController,
-                          labelText: 'Description',
-                          hinttext: 'Add payment description (optional)',
+                          controller: _notesController,
+                          labelText: 'Notes',
+                          hinttext: 'Add payment notes',
                           maxLines: 3,
                           icon: const Icon(
                             Icons.description,
@@ -226,32 +249,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 32),
-
                   // Payment Button Section
                   Center(
                     child: CustomButton(
-                      text: 'Proceed to Pay ₹500',
+                      text: 'Next',
                       color: AppColors.background,
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          Messenger.alertSuccess('Payment paid');
-                          MyRouter.pushRemoveUntil(screen: HomeScreen());
+                          MyRouter.push(
+                            screen: PaymentDeatils(
+                              turfName: widget.userSlectedgame,
+                              selectedDate: widget.selectedDate,
+
+                              fullName: _nameController.text,
+                              fatherName: _fatherNameController.text,
+                              mobileNumber: _mobileController.text,
+                              email: _emailController.text,
+                              address: _addressController.text,
+                              notes: _notesController.text,
+                              selectedSlots: widget.selectedSlots,
+                            ),
+                          );
                         }
                       },
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Center(
-                    child: Text(
-                      'Payments are secured with Razorpay',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        fontStyle: FontStyle.italic,
-                      ),
                     ),
                   ),
                 ],

@@ -1,4 +1,3 @@
-// manage_users_screen.dart
 import 'package:flutter/material.dart';
 import 'package:sportspark/utils/const/const.dart';
 
@@ -116,6 +115,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
       ),
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: false,
           title: const Text(
             'Manage Users',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
@@ -134,129 +134,53 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
-            child: CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.all(16.0),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      'All Users',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.iconColor,
-                      ),
+            child: DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  // TabBar
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    ),
+                    child: TabBar(
+                      labelColor: AppColors.bluePrimaryDual,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: AppColors.bluePrimaryDual,
+                      indicatorWeight: 3,
+                      tabs: const [
+                        Tab(text: 'User List'),
+                        Tab(text: 'Admin List'),
+                      ],
                     ),
                   ),
-                ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final user = _dummyUsers[index];
-                    final status = user['status'] as String;
-                    Color statusColor = Colors.green;
-                    if (status == 'Inactive') statusColor = Colors.orange;
-                    if (status == 'Pending') statusColor = Colors.blue;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: Card(
-                        elevation: 6,
-                        shadowColor: Colors.black.withOpacity(0.1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  // TabBarView
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        // User List Tab
+                        _buildUserList(
+                          _dummyUsers
+                              .where((user) => user['role'] == 'User')
+                              .toList(),
                         ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            radius: 25,
-                            backgroundImage: NetworkImage(
-                              user['avatarUrl'] as String,
-                            ),
-                            onBackgroundImageError: (_, __) =>
-                                Icon(Icons.person, color: AppColors.iconColor),
-                          ),
-                          title: Text(
-                            user['name'] as String,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.iconColor,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user['email'] as String,
-                                style: TextStyle(
-                                  color: AppColors.iconLightColor,
-                                ),
-                              ),
-                              Text(
-                                'Joined: ${user['joined']}',
-                                style: TextStyle(
-                                  color: AppColors.iconLightColor,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  status,
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          trailing: PopupMenuButton<String>(
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: AppColors.iconLightColor,
-                            ),
-                            onSelected: (value) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Action: $value for ${user['name']}',
-                                  ),
-                                ),
-                              );
-                            },
-                            itemBuilder: (context) => [
-                              const PopupMenuItem(
-                                value: 'Edit',
-                                child: Text('Edit'),
-                              ),
-                              const PopupMenuItem(
-                                value: 'Block',
-                                child: Text('Block'),
-                              ),
-                              const PopupMenuItem(
-                                value: 'Delete',
-                                child: Text('Delete'),
-                              ),
-                            ],
-                          ),
+                        // Admin List Tab
+                        _buildUserList(
+                          _dummyUsers
+                              .where((user) => user['role'] == 'Admin')
+                              .toList(),
                         ),
-                      ),
-                    );
-                  }, childCount: _dummyUsers.length),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -270,6 +194,121 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
           child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
+    );
+  }
+
+  Widget _buildUserList(List<Map<String, dynamic>> users) {
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16.0),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              users.isEmpty ? 'No Users Found' : 'All ${users[0]['role']}s',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.iconColor,
+              ),
+            ),
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final user = users[index];
+            final status = user['status'] as String;
+            Color statusColor = Colors.green;
+            if (status == 'Inactive') statusColor = Colors.orange;
+            if (status == 'Pending') statusColor = Colors.blue;
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Card(
+                elevation: 6,
+                shadowColor: Colors.black.withOpacity(0.1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    radius: 25,
+                    backgroundImage: NetworkImage(user['avatarUrl'] as String),
+                    onBackgroundImageError: (_, __) =>
+                        Icon(Icons.person, color: AppColors.iconColor),
+                  ),
+                  title: Text(
+                    user['name'] as String,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.iconColor,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user['email'] as String,
+                        style: TextStyle(color: AppColors.iconLightColor),
+                      ),
+                      Text(
+                        'Joined: ${user['joined']}',
+                        style: TextStyle(
+                          color: AppColors.iconLightColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          status,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert,
+                      color: AppColors.iconLightColor,
+                    ),
+                    onSelected: (value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Action: $value for ${user['name']}'),
+                        ),
+                      );
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(value: 'Edit', child: Text('Edit')),
+                      const PopupMenuItem(value: 'Block', child: Text('Block')),
+                      const PopupMenuItem(
+                        value: 'Delete',
+                        child: Text('Delete'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }, childCount: users.length),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+      ],
     );
   }
 }

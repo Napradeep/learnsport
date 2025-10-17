@@ -56,16 +56,6 @@ class GalleryScreen extends StatelessWidget {
                     ),
                   ),
                 );
-                // Navigator.push(
-                //   context,
-                //   PageRouteBuilder(
-                //     transitionDuration: const Duration(milliseconds: 600),
-                //     pageBuilder: (_, __, ___) => _FullImageView(
-                //       imagePath: item['image']!,
-                //       title: item['name']!,
-                //     ),
-                //   ),
-                // );
               },
               child: Hero(
                 tag: item['image']!,

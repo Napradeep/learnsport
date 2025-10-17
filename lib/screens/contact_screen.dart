@@ -20,6 +20,27 @@ class _ContactScreenState extends State<ContactScreen> {
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _enquiryController = TextEditingController();
+  final TextEditingController _nativeController = TextEditingController();
+  //_nativeController
+  String? _selectedContactType;
+  // Add this at the top of your State class
+  bool _contactTypeHasError = false;
+
+  final List<String> _contactTypes = [
+    'General',
+    'Skating',
+    'Pickle Ball',
+    'Basketball',
+    'Kabaddi',
+    'Football (Turf) 14,000 sqft',
+    'Karate',
+    'Volleyball',
+    'Athletic Track',
+    'Cricket (Turf)',
+    'Archery',
+    'Cricket (Net Practice)',
+    'Badminton (Outdoor)',
+  ];
 
   @override
   void dispose() {
@@ -40,7 +61,6 @@ class _ContactScreenState extends State<ContactScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         backgroundColor: AppColors.bluePrimaryDual,
-
         title: const Text(
           'Contact & Enquiry',
           style: TextStyle(
@@ -141,11 +161,93 @@ class _ContactScreenState extends State<ContactScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
+                        MyTextFormFieldBox(
+                          controller: _nativeController,
+                          labelText: 'Native',
+                          hinttext: 'Enter your native',
+                          keyboardType: TextInputType.emailAddress,
+                          icon: const Icon(
+                            Icons.location_history,
+                            color: AppColors.iconLightColor,
+                          ),
+                          validator: (value) {
+                            if (value != null && value.isNotEmpty) {
+                              return InputValidator.validateName(value);
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Dropdown for Contact Type
+
+                        // Inside your build method, replace your DropdownButtonFormField with:
+                        DropdownButtonFormField<String>(
+                          value: _selectedContactType,
+                          decoration: InputDecoration(
+                            labelText: 'Contact Type',
+                            hintText: 'Select contact type',
+                            prefixIcon: const Icon(
+                              Icons.category_outlined,
+                              color: AppColors.iconLightColor,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                                width: 2,
+                              ),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 210, 65, 51),
+                                width: 1,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: Color.fromARGB(255, 210, 65, 51),
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          items: _contactTypes.map((String type) {
+                            return DropdownMenuItem<String>(
+                              value: type,
+                              child: Text(type),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedContactType = newValue;
+                            });
+                          },
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please select a contact type'
+                              : null,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                        ),
+
+                        const SizedBox(height: 16),
 
                         MyTextFormFieldBox(
                           controller: _enquiryController,
-                          labelText: 'Write Your Enquiry',
-                          hinttext: 'Describe your query',
+                          labelText: 'Write Your Notes',
+                          hinttext: 'Describe your Notes',
                           maxLines: 5,
                           icon: const Icon(
                             Icons.message,
@@ -179,9 +281,7 @@ class _ContactScreenState extends State<ContactScreen> {
                             ),
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                FocusScope.of(
-                                  context,
-                                ).unfocus(); // close keyboard
+                                FocusScope.of(context).unfocus();
 
                                 showGeneralDialog(
                                   context: context,
@@ -192,7 +292,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                   ),
                                   pageBuilder:
                                       (context, animation, secondaryAnimation) {
-                                        return const SizedBox.shrink(); // required placeholder
+                                        return const SizedBox.shrink();
                                       },
                                   transitionBuilder:
                                       (
@@ -258,7 +358,8 @@ class _ContactScreenState extends State<ContactScreen> {
                                                   ),
                                                   onPressed: () =>
                                                       MyRouter.pushRemoveUntil(
-                                                        screen: HomeScreen(),
+                                                        screen:
+                                                            const HomeScreen(),
                                                       ),
                                                   child: const Padding(
                                                     padding:

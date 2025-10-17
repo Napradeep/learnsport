@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class Messenger {
   static final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
-  static alertError(String msg) => alert(msg: msg, color: Colors.black);
+  static alertError(String msg) => alert(msg: msg, color: Colors.red);
   static alertSuccess(String msg) => alert(msg: msg, color: Colors.green);
 
   static alert({required String msg, Color? color}) {

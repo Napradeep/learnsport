@@ -1,6 +1,8 @@
 // settings_screen.dart
 import 'package:flutter/material.dart';
+import 'package:sportspark/screens/login/view/change_password.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:sportspark/utils/router/router.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -34,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: false,
           title: const Text(
             'Settings',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
@@ -44,59 +47,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Text(
-              //   'General',
-              //   style: TextStyle(
-              //     fontSize: 18,
-              //     fontWeight: FontWeight.bold,
-              //     color: AppColors.iconColor,
-              //   ),
-              // ),
-              // const SizedBox(height: 16),
-              // Card(
-              //   elevation: 4,
-              //   shape: RoundedRectangleBorder(
-              //     borderRadius: BorderRadius.circular(12),
-              //   ),
-              //   child: Column(
-              //     children: [
-              //       SwitchListTile(
-              //         title: const Text('Notifications'),
-              //         subtitle: const Text('Receive booking updates'),
-              //         value: _notifications,
-              //         onChanged: (value) =>
-              //             setState(() => _notifications = value),
-              //         activeColor: AppColors.bluePrimaryDual,
-              //       ),
-              //       const Divider(height: 1),
-              //       SwitchListTile(
-              //         title: const Text('Dark Mode'),
-              //         subtitle: const Text('Enable dark theme'),
-              //         value: _darkMode,
-              //         onChanged: (value) => setState(() => _darkMode = value),
-              //         activeColor: AppColors.bluePrimaryDual,
-              //       ),
-              //       const Divider(height: 1),
-              //       ListTile(
-              //         title: const Text('Language'),
-              //         trailing: DropdownButton<String>(
-              //           value: _selectedLanguage,
-              //           items: _languages
-              //               .map(
-              //                 (lang) => DropdownMenuItem(
-              //                   value: lang,
-              //                   child: Text(lang),
-              //                 ),
-              //               )
-              //               .toList(),
-              //           onChanged: (value) =>
-              //               setState(() => _selectedLanguage = value!),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-              // const SizedBox(height: 14),
               Text(
                 'Security',
                 style: TextStyle(
@@ -118,11 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: const Text('Change Password'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Redirect to password change'),
-                          ),
-                        );
+                        MyRouter.push(screen: ChangePasswordScreen());
                       },
                     ),
                     const Divider(height: 1),
