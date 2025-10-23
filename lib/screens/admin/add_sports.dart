@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/snackbar/snackbar.dart';
+import 'package:sportspark/utils/widget/custom_confirmation_dialog.dart';
 
 class AddEditSportScreen extends StatefulWidget {
   final Map<String, dynamic>? sport;
@@ -16,24 +17,16 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _GroundnameController = TextEditingController();
+  final TextEditingController _groundnameController = TextEditingController();
   final TextEditingController _actualPriceController = TextEditingController();
   final TextEditingController _finalPriceController = TextEditingController();
   final TextEditingController _aboutController = TextEditingController();
+  final TextEditingController _halfgroundController = TextEditingController();
+  final TextEditingController _fullgroundController = TextEditingController();
 
   String _status = 'Active';
-  String? _selectedGround;
   File? _sportImage;
   File? _bannerImage;
-
-  final List<String> _groundList = [
-    'Main Turf Ground',
-    'Indoor Badminton Court',
-    'Tennis Arena',
-    'Basketball Court',
-    'Cricket Nets',
-    'Skating Rink',
-  ];
 
   @override
   void initState() {
@@ -46,17 +39,19 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
           widget.sport!['sport_final_price_per_slot']?.toString() ?? '';
       _aboutController.text = widget.sport!['about_sport'] ?? '';
       _status = widget.sport!['status'] ?? 'Active';
-      _selectedGround = widget.sport!['ground_name'];
+      _groundnameController.text = widget.sport!['ground_name'] ?? '';
     }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _groundnameController.dispose();
     _actualPriceController.dispose();
     _finalPriceController.dispose();
-    _GroundnameController.dispose();
     _aboutController.dispose();
+    _halfgroundController.dispose();
+    _fullgroundController.dispose();
     super.dispose();
   }
 
@@ -76,29 +71,54 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
 
   void _saveSport() {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedGround == null) {
-      Messenger.alertError('Please select a ground name');
+
+    if (_sportImage == null && widget.sport == null) {
+      Messenger.alertError('Sport image is required');
+      return;
+    }
+
+    final actualPrice =
+        double.tryParse(_actualPriceController.text.trim()) ?? 0.0;
+    final finalPrice =
+        double.tryParse(_finalPriceController.text.trim()) ?? 0.0;
+
+    if (finalPrice > actualPrice) {
+      Messenger.alertError('Final price cannot be greater than actual price');
       return;
     }
 
     final sportData = {
       'sport_name': _nameController.text.trim(),
-      'ground_name': _selectedGround,
-      'sport_actual_price_per_slot':
-          double.tryParse(_actualPriceController.text.trim()) ?? 0.0,
-      'sport_final_price_per_slot':
-          double.tryParse(_finalPriceController.text.trim()) ?? 0.0,
+      'ground_name': _groundnameController.text.trim(),
+      'sport_actual_price_per_slot': actualPrice,
+      'sport_final_price_per_slot': finalPrice,
       'about_sport': _aboutController.text.trim(),
       'status': _status,
       'sport_image': _sportImage?.path,
       'sport_banner': _bannerImage?.path,
+      'half_ground': _halfgroundController.text.trim(),
+      'full_ground': _fullgroundController.text.trim(),
     };
 
-    Messenger.alertSuccess(
-      widget.sport != null ? 'Sport Updated!' : 'Sport Added!',
+    // Show confirmation dialog before saving
+    CustomConfirmationDialog.show(
+      context: context,
+      title: widget.sport != null ? 'Update Sport' : 'Add Sport',
+      message: widget.sport != null
+          ? 'Are you sure you want to update this sport?'
+          : 'Are you sure you want to add this sport?',
+      icon: widget.sport != null ? Icons.edit : Icons.add,
+      iconColor: widget.sport != null ? Colors.orange : Colors.green,
+      backgroundColor: Colors.white,
+      textColor: Colors.black87,
+      confirmColor: AppColors.bluePrimaryDual,
+      onConfirm: () {
+        Navigator.pop(context, sportData);
+        Messenger.alertSuccess(
+          widget.sport != null ? 'Sport Updated!' : 'Sport Added!',
+        );
+      },
     );
-
-    Navigator.pop(context, sportData);
   }
 
   Widget _buildImagePicker(String label, File? image, bool isBanner) {
@@ -110,11 +130,11 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
           color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade400),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: Colors.black12,
               blurRadius: 4,
-              offset: const Offset(0, 2),
+              offset: Offset(0, 2),
             ),
           ],
         ),
@@ -143,6 +163,7 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
     TextEditingController controller, {
     TextInputType type = TextInputType.text,
     bool required = true,
+    String? Function(String?)? customValidator,
   }) {
     return TextFormField(
       controller: controller,
@@ -155,6 +176,7 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
         if (required && (value == null || value.isEmpty)) {
           return '$label is required';
         }
+        if (customValidator != null) return customValidator(value);
         return null;
       },
     );
@@ -222,18 +244,43 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                   _buildTextField('Sport Name', _nameController),
                   const SizedBox(height: 16),
 
-                  _buildTextField(
-                    'Ground Name ',
-                    _GroundnameController,
-                    type: TextInputType.name,
-                  ),
-
+                  _buildTextField('Ground Name', _groundnameController),
                   const SizedBox(height: 16),
 
                   _buildTextField(
                     'Actual Price per Slot',
                     _actualPriceController,
                     type: TextInputType.number,
+                    customValidator: (value) {
+                      final price = double.tryParse(value ?? '');
+                      if (price == null || price <= 0) {
+                        return 'Enter a valid actual price';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          'Half Ground',
+                          _halfgroundController,
+                          type: TextInputType.number,
+                          required: false,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTextField(
+                          'Full Ground',
+                          _fullgroundController,
+                          type: TextInputType.number,
+                          required: false,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
@@ -241,13 +288,30 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                     'Final Price per Slot',
                     _finalPriceController,
                     type: TextInputType.number,
+                    customValidator: (value) {
+                      final finalPrice = double.tryParse(value ?? '');
+                      final actualPrice =
+                          double.tryParse(_actualPriceController.text) ?? 0;
+                      if (finalPrice == null || finalPrice < 0) {
+                        return 'Enter a valid final price';
+                      }
+                      if (finalPrice > actualPrice) {
+                        return 'Final price cannot exceed actual price';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 
                   _buildTextField(
                     'About Sport',
                     _aboutController,
-                    required: true,
+                    customValidator: (value) {
+                      if ((value?.length ?? 0) < 10) {
+                        return 'About Sport should be at least 10 characters';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 

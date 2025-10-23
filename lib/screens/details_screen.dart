@@ -22,13 +22,18 @@ class _DetailsScreenState extends State<DetailsScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  // Constants for reusable values
+  static const _heroImageHeight = 280.0;
+  static const _animationDuration = Duration(milliseconds: 800);
+  static const _borderRadius = 30.0;
+
   @override
   void initState() {
     super.initState();
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: _animationDuration,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
@@ -50,10 +55,11 @@ class _DetailsScreenState extends State<DetailsScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Game details mapping
     final Map<String, String> gameDetails = {
-      'Football Turf':
+      'Football (Turf) 14,000 sqft':
           'Play on our 14,000 sq.ft. turf with night lighting, professional-grade flooring, and equipment. Perfect for casual games or tournaments!',
-      'Cricket Turf':
+      'Cricket (Turf)':
           'Enjoy net practice or team matches on high-quality turf pitches. Bowling machine and lights available for night sessions.',
       'Basketball':
           'Experience full-sized basketball courts with cushioned flooring and high-grade hoops, ideal for practice and friendly matches.',
@@ -61,8 +67,20 @@ class _DetailsScreenState extends State<DetailsScreen>
           'Top-notch volleyball courts with soft sand surface, perfect for competitive and recreational matches.',
       'Skating':
           'Smooth tracks for beginners and professionals with safety barriers and coaching available.',
-      'Badminton':
+      'Badminton (Outdoor)':
           'Indoor and outdoor badminton courts coming soon with advanced flooring and LED lighting.',
+      'Pickle Ball':
+          'Enjoy pickleball on our specialized courts with premium surfaces and equipment.',
+      'Kabaddi':
+          'Play kabaddi on our professional-grade mats with excellent grip and safety features.',
+      'Karate':
+          'Practice karate in our dedicated dojo with cushioned flooring and expert instructors.',
+      'Athletic Track':
+          'Run on our world-class athletic track designed for speed and endurance training.',
+      'Archery':
+          'Test your precision on our archery range with professional targets and equipment.',
+      'Cricket (Net Practice)':
+          'Hone your skills in our net practice area with high-quality nets and bowling machines.',
     };
 
     final detailText =
@@ -94,30 +112,41 @@ class _DetailsScreenState extends State<DetailsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🌅 Hero Image Header
+                // Hero Image Header
                 Stack(
                   children: [
                     Hero(
                       tag: widget.imagePath,
                       child: ClipRRect(
                         borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(30),
-                          bottomRight: Radius.circular(30),
+                          bottomLeft: Radius.circular(_borderRadius),
+                          bottomRight: Radius.circular(_borderRadius),
                         ),
                         child: Image.asset(
                           widget.imagePath,
-                          height: 280,
+                          height: _heroImageHeight,
                           width: double.infinity,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: _heroImageHeight,
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    size: 50,
+                                  ),
+                                ),
+                              ),
                         ),
                       ),
                     ),
                     Container(
-                      height: 280,
+                      height: _heroImageHeight,
                       decoration: BoxDecoration(
                         borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(30),
-                          bottomRight: Radius.circular(30),
+                          bottomLeft: Radius.circular(_borderRadius),
+                          bottomRight: Radius.circular(_borderRadius),
                         ),
                         gradient: LinearGradient(
                           colors: [
@@ -151,8 +180,31 @@ class _DetailsScreenState extends State<DetailsScreen>
                     ),
                   ],
                 ),
+                SizedBox(height: 20),
 
-                // 🌟 Details Section
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ScaleTransition(
+                    scale: Tween(begin: 0.9, end: 1.0).animate(
+                      CurvedAnimation(
+                        parent: _controller,
+                        curve: Curves.elasticOut,
+                      ),
+                    ),
+                    child: CustomButton(
+                      text: 'Book a Slot Now',
+                      color: Colors.white,
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        '/slot_booking',
+                        arguments: widget.gameName,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+
+                // Details Section
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -161,7 +213,7 @@ class _DetailsScreenState extends State<DetailsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 🔹 About Section Card
+                      // About Section Card
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
@@ -209,7 +261,7 @@ class _DetailsScreenState extends State<DetailsScreen>
 
                       const SizedBox(height: 25),
 
-                      // 🏟 Facilities
+                      // Facilities
                       const Text(
                         'Facilities Available:',
                         style: TextStyle(
@@ -248,26 +300,7 @@ class _DetailsScreenState extends State<DetailsScreen>
 
                       const SizedBox(height: 40),
 
-                      // 🎯 Book Slot Button
-                      Center(
-                        child: ScaleTransition(
-                          scale: Tween(begin: 0.9, end: 1.0).animate(
-                            CurvedAnimation(
-                              parent: _controller,
-                              curve: Curves.elasticOut,
-                            ),
-                          ),
-                          child: CustomButton(
-                            text: 'Book a Slot Now',
-                            color: AppColors.background,
-                            onPressed: () => Navigator.pushNamed(
-                              context,
-                              '/slot_booking',
-                              arguments: widget.gameName,
-                            ),
-                          ),
-                        ),
-                      ),
+                      // Book Slot Button
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -281,7 +314,6 @@ class _DetailsScreenState extends State<DetailsScreen>
   }
 }
 
-// 🌿 Animated Facility Chip
 class _AnimatedFacilityChip extends StatefulWidget {
   final IconData icon;
   final String label;

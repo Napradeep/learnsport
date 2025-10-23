@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportspark/screens/details_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
 
 class SportsGame extends StatefulWidget {
@@ -10,6 +11,21 @@ class SportsGame extends StatefulWidget {
 
 class _SportsGameState extends State<SportsGame>
     with SingleTickerProviderStateMixin {
+  static const Map<String, String> _sportImages = {
+    'Skating': 'assets/images/skating.jpg',
+    'Pickle Ball': 'assets/images/pickleball.jpg',
+    'Basketball': 'assets/basketball.jpg',
+    'Kabaddi': 'assets/kabadi.jpg',
+    'Football (Turf) 14,000 sqft': 'ssets/crickettruf.jpg',
+    'Karate': 'assets/images/karate.jpg',
+    'Volleyball': 'assets/volleyball.jpg',
+    'Athletic Track': 'assets/images/athletic_track.jpg',
+    'Cricket (Turf)': 'assets/images/cricket.jpg',
+    'Archery': 'assets/images/archery.jpg',
+    'Cricket (Net Practice)': 'ssets/crickettruf.jpg',
+    'Badminton (Outdoor)': 'assets/images/badminton.jpg',
+  };
+
   final List<Map<String, dynamic>> sportsData = [
     {'name': 'Skating', 'icon': Icons.ice_skating},
     {'name': 'Pickle Ball', 'icon': Icons.sports_tennis},
@@ -58,16 +74,15 @@ class _SportsGameState extends State<SportsGame>
           itemCount: sportsData.length,
           itemBuilder: (context, index) {
             final data = sportsData[index];
+            final imagePath =
+                _sportImages[data['name']] ?? 'assets/images/default.jpg';
 
             return TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 0, end: 1),
               duration: Duration(milliseconds: 400 + index * 120),
               curve: Curves.easeOutBack,
               builder: (context, value, child) {
-                final opacity = value.clamp(
-                  0.0,
-                  1.0,
-                ); // 🧠 Prevents out-of-range values
+                final opacity = value.clamp(0.0, 1.0);
                 return Transform.scale(
                   scale: value,
                   child: Opacity(opacity: opacity, child: child),
@@ -76,7 +91,18 @@ class _SportsGameState extends State<SportsGame>
               child: _AnimatedCard(
                 name: data['name'],
                 icon: data['icon'],
-                onTap: () {},
+                imagePath: imagePath,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailsScreen(
+                        gameName: data['name'],
+                        imagePath: imagePath,
+                      ),
+                    ),
+                  );
+                },
               ),
             );
           },
@@ -89,11 +115,13 @@ class _SportsGameState extends State<SportsGame>
 class _AnimatedCard extends StatefulWidget {
   final String name;
   final IconData icon;
+  final String imagePath;
   final VoidCallback onTap;
 
   const _AnimatedCard({
     required this.name,
     required this.icon,
+    required this.imagePath,
     required this.onTap,
   });
 
@@ -116,55 +144,60 @@ class _AnimatedCardState extends State<_AnimatedCard>
         scale: _isPressed ? 0.95 : 1.0,
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.bluePrimaryDual.withOpacity(0.9),
-                AppColors.bluePrimaryDual.withOpacity(0.7),
+        child: Hero(
+          tag: widget.imagePath,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.bluePrimaryDual.withOpacity(0.9),
+                  AppColors.bluePrimaryDual.withOpacity(0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.bluePrimaryDual.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 6),
+                ),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.bluePrimaryDual.withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                padding: const EdgeInsets.all(12),
-                child: Icon(
-                  widget.icon,
-                  size: 36,
-                  color: AppColors.bluePrimaryDual,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                child: Text(
-                  widget.name,
-                  style: const TextStyle(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    height: 1.3,
                   ),
-                  textAlign: TextAlign.center,
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
+                    widget.icon,
+                    size: 36,
+                    color: AppColors.bluePrimaryDual,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Text(
+                    widget.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

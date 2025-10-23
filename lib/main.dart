@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
         ),
         '/about_us': (context) => const AboutUsScreen(),
         '/sport_game': (context) => const SportsGame(),
-        '/gallery': (context) => const GalleryScreen(),
+        '/gallery': (context) => GalleryScreen(isAdmin: false),
         '/admin': (context) => const AdminScreen(),
       },
     );

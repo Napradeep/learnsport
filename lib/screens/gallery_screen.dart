@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:sportspark/screens/admin/add_gallery.dart';
 import 'package:sportspark/screens/spoert_deatils_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:sportspark/utils/router/router.dart';
 
 class GalleryScreen extends StatelessWidget {
-  const GalleryScreen({super.key});
+  final bool isAdmin;
+  const GalleryScreen({super.key, required this.isAdmin});
 
   final List<Map<String, String>> _banners = const [
     {'image': 'assets/basketball.jpg', 'name': 'Basketball'},
@@ -51,6 +54,7 @@ class GalleryScreen extends StatelessWidget {
                   PageRouteBuilder(
                     transitionDuration: const Duration(milliseconds: 600),
                     pageBuilder: (_, __, ___) => SportDetailScreen(
+                      isAdmin: isAdmin,
                       imagePath: item['image']!,
                       title: item['name']!,
                     ),
@@ -105,6 +109,16 @@ class GalleryScreen extends StatelessWidget {
           },
         ),
       ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              onPressed: () => {MyRouter.push(screen: GalleryFormScreen())},
+              backgroundColor: AppColors.bluePrimaryDual,
+              elevation: 2,
+              hoverElevation: 4,
+              tooltip: 'Add Gallery',
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
+            )
+          : SizedBox(),
     );
   }
 }

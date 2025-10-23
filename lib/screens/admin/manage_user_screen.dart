@@ -184,15 +184,15 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Add new user')));
-          },
-          backgroundColor: AppColors.bluePrimaryDual,
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () {
+        //     ScaffoldMessenger.of(
+        //       context,
+        //     ).showSnackBar(const SnackBar(content: Text('Add new user')));
+        //   },
+        //   backgroundColor: AppColors.bluePrimaryDual,
+        //   child: const Icon(Icons.add, color: Colors.white),
+        // ),
       ),
     );
   }

@@ -71,6 +71,15 @@ class DrawerMenu extends StatelessWidget {
                 MyRouter.push(screen: SportsList());
               },
             ),
+            // _buildDrawerItem(
+            //   context,
+            //   icon: Icons.person,
+            //   title: 'My Profile',
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     MyRouter.push(screen: MyProfileScreen());
+            //   },
+            // ),
             _buildDrawerItem(
               context,
               icon: Icons.photo_library,

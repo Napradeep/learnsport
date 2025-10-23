@@ -4,6 +4,7 @@ import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/snackbar/snackbar.dart';
 import 'package:sportspark/utils/widget/custom_button.dart';
+import 'package:sportspark/utils/widget/custom_confirmation_dialog.dart';
 
 class PaymentDeatils extends StatefulWidget {
   final String turfName;
@@ -237,13 +238,33 @@ class _PaymentDeatilsState extends State<PaymentDeatils>
                   const SizedBox(height: 10),
 
                   // Payment Button
+                  //₹${totalAmount.toStringAsFixed(2)}
                   Center(
                     child: CustomButton(
-                      text: 'Proceed to Pay ₹${totalAmount.toStringAsFixed(2)}',
+                      text: 'Proceed to Pay ',
                       color: AppColors.background,
                       onPressed: () {
-                        Messenger.alertSuccess('Payment successful ✅');
-                        MyRouter.pushRemoveUntil(screen: const HomeScreen());
+                        String dialogTitle = "Payment Confirmation";
+                        String dialogMessage =
+                            "Are you sure you want to complete the payment?";
+
+                        CustomConfirmationDialog.show(
+                          context: context,
+                          title: dialogTitle,
+                          message: dialogMessage,
+                          icon: Icons.payment,
+                          onConfirm: () {
+                            Messenger.alertSuccess('Payment successful ✅');
+                            MyRouter.pushRemoveUntil(
+                              screen: const HomeScreen(),
+                            );
+                          },
+                          confirmColor: AppColors.bluePrimaryDual,
+
+                          iconColor: AppColors.iconColor,
+                          backgroundColor: AppColors.background,
+                          textColor: AppColors.textPrimary,
+                        );
                       },
                     ),
                   ),

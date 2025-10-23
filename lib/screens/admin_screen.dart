@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sportspark/screens/admin/add_sports.dart';
 import 'package:sportspark/screens/admin/contact_us.dart';
 import 'package:sportspark/screens/admin/manage_booking_screen.dart';
+import 'package:sportspark/screens/admin/manage_sports.dart';
 import 'package:sportspark/screens/admin/manage_user_screen.dart';
+import 'package:sportspark/screens/admin/my_profile.dart';
 import 'package:sportspark/screens/admin/setting.dart';
+import 'package:sportspark/screens/gallery_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/widget/admin_card.dart';
@@ -15,10 +17,19 @@ class AdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final adminCards = [
       AdminCardData(
+        title: 'Manage Profile',
+        icon: Icons.people_alt_outlined,
+        color: Colors.red,
+
+        onTap: () {
+          MyRouter.push(screen: MyProfileScreen());
+        },
+      ),
+      AdminCardData(
         title: 'Manage Bookings',
         icon: Icons.calendar_month_outlined,
         color: Colors.blueAccent,
-        // description: 'View and control all sports ground bookings.',
+
         onTap: () {
           MyRouter.push(screen: const BookingHistoryScreen());
         },
@@ -27,7 +38,7 @@ class AdminScreen extends StatelessWidget {
         title: 'Manage Users',
         icon: Icons.people_alt_outlined,
         color: Colors.orangeAccent,
-        // description: 'View, block, or update user profiles.',
+
         onTap: () {
           MyRouter.push(screen: const ManageUsersScreen());
         },
@@ -36,34 +47,34 @@ class AdminScreen extends StatelessWidget {
         title: 'Contact Us',
         icon: Icons.contact_support,
         color: Colors.purpleAccent,
-        // description: 'Manage incoming support requests and messages.',
+
         onTap: () {
           MyRouter.push(screen: const ContactUsScreen());
         },
       ),
       AdminCardData(
-        title: 'Add Sport ',
+        title: 'Manage Sport ',
         icon: Icons.sports,
         color: Colors.greenAccent,
-        //description: 'Add or update the list of available sports.',
+
         onTap: () {
-          MyRouter.push(screen: const AddEditSportScreen());
+          MyRouter.push(screen: const ManageSportsScreen());
         },
       ),
       AdminCardData(
-        title: 'Add Gallery',
+        title: 'Manage Gallery',
         icon: Icons.photo_library,
         color: Colors.tealAccent,
-        // description: 'Upload and manage images for the gallery.',
+
         onTap: () {
-          MyRouter.push(screen: const UploadGalleryScreen());
+          MyRouter.push(screen: GalleryScreen(isAdmin: true));
         },
       ),
       AdminCardData(
         title: 'Settings',
         icon: Icons.settings,
         color: Colors.redAccent,
-        ////// description: 'Customize system preferences and access controls.',
+
         onTap: () {
           MyRouter.push(screen: const SettingsScreen());
         },
@@ -136,18 +147,6 @@ class AdminScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class UploadGalleryScreen extends StatelessWidget {
-  const UploadGalleryScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Upload Gallery')),
-      body: const Center(child: Text('Upload Gallery Screen')),
     );
   }
 }

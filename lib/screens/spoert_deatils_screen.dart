@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sportspark/utils/widget/custom_confirmation_dialog.dart';
 import 'package:video_player/video_player.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:sportspark/utils/snackbar/snackbar.dart';
 
 final Map<String, List<String>> _imageData = {
   '05/10/2025': [
@@ -36,11 +38,13 @@ final Map<String, List<String>> _videoData = {
 class SportDetailScreen extends StatefulWidget {
   final String title;
   final String imagePath;
+  final bool isAdmin;
 
   const SportDetailScreen({
     super.key,
     required this.title,
     required this.imagePath,
+    this.isAdmin = false,
   });
 
   @override
@@ -61,6 +65,20 @@ class _SportDetailScreenState extends State<SportDetailScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _deleteMedia(
+    String date,
+    List<String> items,
+    bool isVideo,
+  ) async {
+    final dataMap = isVideo ? _videoData : _imageData;
+    for (var item in items) {
+      dataMap[date]!.remove(item);
+    }
+    if (dataMap[date]!.isEmpty) dataMap.remove(date);
+    setState(() {});
+    Messenger.alertSuccess("Selected media deleted successfully");
   }
 
   @override
@@ -166,6 +184,9 @@ class _SportDetailScreenState extends State<SportDetailScreen>
                   title: '$date - ${isVideo ? 'Videos' : 'Images'}',
                   items: items,
                   isVideo: isVideo,
+                  isAdmin: widget.isAdmin,
+                  onDelete: (selectedItems) =>
+                      _deleteMedia(date, selectedItems, isVideo),
                 ),
               ),
             );
@@ -199,6 +220,8 @@ class _SportDetailScreenState extends State<SportDetailScreen>
             initialIndex: idx,
             title: '${widget.title} - $date',
             isVideo: isVideo,
+            isAdmin: widget.isAdmin,
+            onDelete: () => _deleteMedia(date, [item], isVideo),
           ),
         ),
       ),
@@ -208,44 +231,49 @@ class _SportDetailScreenState extends State<SportDetailScreen>
           borderRadius: BorderRadius.circular(12),
           child: SizedBox(
             width: 120,
-            child: isVideo
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Container(color: Colors.black26),
-                      const Center(
-                        child: Icon(
-                          Icons.play_circle_fill,
-                          color: Colors.white,
-                          size: 50,
-                        ),
-                      ),
-                    ],
-                  )
-                : Image.network(
-                    item,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: Colors.grey.shade300,
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.blueAccent,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                isVideo
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(color: Colors.black26),
+                          const Center(
+                            child: Icon(
+                              Icons.play_circle_fill,
+                              color: Colors.white,
+                              size: 50,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Image.network(
+                        item,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey.shade300,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.blueAccent,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                            size: 40,
                           ),
                         ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(
-                        Icons.broken_image,
-                        color: Colors.grey,
-                        size: 40,
                       ),
-                    ),
-                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -258,16 +286,27 @@ class _SportDetailScreenState extends State<SportDetailScreen>
   }
 }
 
-class _FullMediaListScreen extends StatelessWidget {
+class _FullMediaListScreen extends StatefulWidget {
   final String title;
   final List<String> items;
   final bool isVideo;
+  final bool isAdmin;
+  final Function(List<String>) onDelete;
 
   const _FullMediaListScreen({
     required this.title,
     required this.items,
     required this.isVideo,
+    required this.isAdmin,
+    required this.onDelete,
   });
+
+  @override
+  State<_FullMediaListScreen> createState() => _FullMediaListScreenState();
+}
+
+class _FullMediaListScreenState extends State<_FullMediaListScreen> {
+  final Set<int> _selectedIndices = {};
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +314,7 @@ class _FullMediaListScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          title,
+          widget.title,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -283,6 +322,36 @@ class _FullMediaListScreen extends StatelessWidget {
         ),
         backgroundColor: AppColors.bluePrimaryDual,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: widget.isAdmin && _selectedIndices.isNotEmpty
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    CustomConfirmationDialog.show(
+                      context: context,
+                      title: 'Delete Items',
+                      message:
+                          'Are you sure you want to delete the selected items?',
+                      icon: Icons.delete_outline,
+                      iconColor: Colors.red,
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black87,
+                      confirmColor: Colors.red,
+                      onConfirm: () {
+                        final selectedItems = _selectedIndices
+                            .map((i) => widget.items[i])
+                            .toList();
+                        widget.onDelete(selectedItems);
+                        Navigator.pop(context);
+                        Messenger.alertSuccess(
+                          'Selected items deleted successfully',
+                        );
+                      },
+                    );
+                  },
+                ),
+              ]
+            : null,
       ),
       body: GridView.builder(
         physics: const BouncingScrollPhysics(),
@@ -292,59 +361,88 @@ class _FullMediaListScreen extends StatelessWidget {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
-        itemCount: items.length,
+        itemCount: widget.items.length,
         itemBuilder: (context, i) => GestureDetector(
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => _FullMediaView(
-                items: items,
+                items: widget.items,
                 initialIndex: i,
-                title: title,
-                isVideo: isVideo,
+                title: widget.title,
+                isVideo: widget.isVideo,
+                isAdmin: widget.isAdmin,
+                onDelete: () => widget.onDelete([widget.items[i]]),
               ),
             ),
           ),
+          onLongPress: () {
+            if (widget.isAdmin) {
+              setState(() {
+                if (_selectedIndices.contains(i)) {
+                  _selectedIndices.remove(i);
+                } else {
+                  _selectedIndices.add(i);
+                }
+              });
+            }
+          },
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: isVideo
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Container(color: Colors.black26),
-                      const Center(
-                        child: Icon(
-                          Icons.play_circle_fill,
-                          color: Colors.white,
-                          size: 50,
-                        ),
-                      ),
-                    ],
-                  )
-                : Image.network(
-                    items[i],
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: Colors.grey.shade300,
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.blueAccent,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                widget.isVideo
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(color: Colors.black26),
+                          const Center(
+                            child: Icon(
+                              Icons.play_circle_fill,
+                              color: Colors.white,
+                              size: 50,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Image.network(
+                        widget.items[i],
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey.shade300,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.blueAccent,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                            size: 40,
                           ),
                         ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(
-                        Icons.broken_image,
-                        color: Colors.grey,
+                      ),
+                if (widget.isAdmin && _selectedIndices.contains(i))
+                  Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: const Center(
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.blue,
                         size: 40,
                       ),
                     ),
                   ),
+              ],
+            ),
           ),
         ),
       ),
@@ -357,12 +455,16 @@ class _FullMediaView extends StatefulWidget {
   final int initialIndex;
   final String title;
   final bool isVideo;
+  final bool isAdmin;
+  final VoidCallback onDelete;
 
   const _FullMediaView({
     required this.items,
     required this.initialIndex,
     required this.title,
     required this.isVideo,
+    required this.isAdmin,
+    required this.onDelete,
   });
 
   @override
@@ -380,11 +482,10 @@ class _FullMediaViewState extends State<_FullMediaView> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _currentIndex);
-    _initializeVideo(widget.items[_currentIndex]);
+    if (widget.isVideo) _initializeVideo(widget.items[_currentIndex]);
   }
 
-  void _initializeVideo(String url) async {
-    if (!widget.isVideo) return;
+  Future<void> _initializeVideo(String url) async {
     setState(() => _isLoading = true);
     _videoController?.dispose();
     _videoController = VideoPlayerController.networkUrl(Uri.parse(url));
@@ -412,6 +513,17 @@ class _FullMediaViewState extends State<_FullMediaView> {
           '${widget.title} (${_currentIndex + 1}/${widget.items.length})',
           style: const TextStyle(color: Colors.white),
         ),
+        // actions: widget.isAdmin
+        //     ? [
+        //         IconButton(
+        //           icon: const Icon(Icons.delete, color: Colors.red),
+        //           onPressed: () {
+        //             widget.onDelete();
+        //             Navigator.pop(context);
+        //           },
+        //         ),
+        //       ]
+        //     : null,
       ),
       body: PageView.builder(
         controller: _pageController,

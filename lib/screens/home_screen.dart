@@ -126,9 +126,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 MyRouter.push(screen: const LoginScreen());
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 7.0),
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: const Icon(
                     Icons.person,
                     color: AppColors.bluePrimaryDual,
-                    size: 24,
+                    size: 20,
                   ),
                 ),
               ),
