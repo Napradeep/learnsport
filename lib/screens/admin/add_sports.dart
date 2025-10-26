@@ -261,8 +261,31 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  _buildTextField(
+                    'Final Price per Slot',
+                    _finalPriceController,
+                    type: TextInputType.number,
+                    customValidator: (value) {
+                      final finalPrice = double.tryParse(value ?? '');
+                      final actualPrice =
+                          double.tryParse(_actualPriceController.text) ?? 0;
+                      if (finalPrice == null || finalPrice < 0) {
+                        return 'Enter a valid final price';
+                      }
+                      if (finalPrice > actualPrice) {
+                        return 'Final price cannot exceed actual price';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
                   Row(
                     children: [
+                      Text("Lightning Price:"),
+                      //Text.rich()
+                      SizedBox(width: 10),
                       Expanded(
                         child: _buildTextField(
                           'Half Ground',
@@ -282,25 +305,7 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
 
-                  _buildTextField(
-                    'Final Price per Slot',
-                    _finalPriceController,
-                    type: TextInputType.number,
-                    customValidator: (value) {
-                      final finalPrice = double.tryParse(value ?? '');
-                      final actualPrice =
-                          double.tryParse(_actualPriceController.text) ?? 0;
-                      if (finalPrice == null || finalPrice < 0) {
-                        return 'Enter a valid final price';
-                      }
-                      if (finalPrice > actualPrice) {
-                        return 'Final price cannot exceed actual price';
-                      }
-                      return null;
-                    },
-                  ),
                   const SizedBox(height: 16),
 
                   _buildTextField(
