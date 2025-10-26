@@ -1,3 +1,5 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:sportspark/screens/admin/add_sports.dart';
 import 'package:sportspark/utils/const/const.dart';
@@ -245,22 +247,39 @@ class _ManageSportsScreenState extends State<ManageSportsScreen> {
                       ],
                     ),
                   ),
-                  // Actions
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildActionButton(
-                        icon: Icons.edit,
-                        color: AppColors.bluePrimaryDual,
-                        onPressed: () => _addOrUpdateSport(sport, index),
+
+                  // 3 Dots Menu
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _addOrUpdateSport(sport, index);
+                      } else if (value == 'delete') {
+                        _deleteSport(index);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 18, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text('Edit'),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      _buildActionButton(
-                        icon: Icons.delete,
-                        color: Colors.red,
-                        onPressed: () => _deleteSport(index),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 18, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete'),
+                          ],
+                        ),
                       ),
                     ],
+                    icon: const Icon(Icons.more_vert, color: Colors.black54),
                   ),
                 ],
               ),
@@ -298,25 +317,6 @@ class _ManageSportsScreenState extends State<ManageSportsScreen> {
           fontWeight: FontWeight.w600,
           color: status == 'Active' ? Colors.green : Colors.red,
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color.withOpacity(0.1),
-        ),
-        child: Icon(icon, size: 20, color: color),
       ),
     );
   }

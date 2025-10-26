@@ -324,32 +324,73 @@ class _FullMediaListScreenState extends State<_FullMediaListScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: widget.isAdmin && _selectedIndices.isNotEmpty
             ? [
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    CustomConfirmationDialog.show(
-                      context: context,
-                      title: 'Delete Items',
-                      message:
-                          'Are you sure you want to delete the selected items?',
-                      icon: Icons.delete_outline,
-                      iconColor: Colors.red,
-                      backgroundColor: Colors.white,
-                      textColor: Colors.black87,
-                      confirmColor: Colors.red,
-                      onConfirm: () {
-                        final selectedItems = _selectedIndices
-                            .map((i) => widget.items[i])
-                            .toList();
-                        widget.onDelete(selectedItems);
-                        Navigator.pop(context);
-                        Messenger.alertSuccess(
-                          'Selected items deleted successfully',
-                        );
-                      },
-                    );
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      CustomConfirmationDialog.show(
+                        context: context,
+                        title: 'Delete Items',
+                        message:
+                            'Are you sure you want to delete the selected items?',
+                        icon: Icons.delete_outline,
+                        iconColor: Colors.red,
+                        backgroundColor: Colors.white,
+                        textColor: Colors.black87,
+                        confirmColor: Colors.red,
+                        onConfirm: () {
+                          final selectedItems = _selectedIndices
+                              .map((i) => widget.items[i])
+                              .toList();
+                          widget.onDelete(selectedItems);
+                          Navigator.pop(context);
+                          Messenger.alertSuccess(
+                            'Selected items deleted successfully',
+                          );
+                        },
+                      );
+                    }
                   },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
                 ),
+
+                // IconButton(
+                //   icon: const Icon(Icons.delete, color: Colors.red),
+                //   onPressed: () {
+                //     CustomConfirmationDialog.show(
+                //       context: context,
+                //       title: 'Delete Items',
+                //       message:
+                //           'Are you sure you want to delete the selected items?',
+                //       icon: Icons.delete_outline,
+                //       iconColor: Colors.red,
+                //       backgroundColor: Colors.white,
+                //       textColor: Colors.black87,
+                //       confirmColor: Colors.red,
+                //       onConfirm: () {
+                //         final selectedItems = _selectedIndices
+                //             .map((i) => widget.items[i])
+                //             .toList();
+                //         widget.onDelete(selectedItems);
+                //         Navigator.pop(context);
+                //         Messenger.alertSuccess(
+                //           'Selected items deleted successfully',
+                //         );
+                //       },
+                //     );
+                //   },
+                // ),
               ]
             : null,
       ),

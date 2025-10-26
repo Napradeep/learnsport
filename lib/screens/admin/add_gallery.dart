@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
+import 'package:intl/intl.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/widget/custom_text_field.dart';
 
@@ -14,19 +14,20 @@ class GalleryFormScreen extends StatefulWidget {
 
 class _GalleryFormScreenState extends State<GalleryFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  String? _sportId, _sportName, _eventName, _galleryTitle, _folderName;
+  String? _sportId, _sportName, _eventName, _galleryTitle;
   String _galleryType = 'Image';
   String _status = 'Pending';
+
   List<XFile> _images = [];
   List<String> _videoLinks = [];
+
   final TextEditingController _videoLinkController = TextEditingController();
   final TextEditingController _sportIdController = TextEditingController();
   final TextEditingController _sportNameController = TextEditingController();
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _galleryTitleController = TextEditingController();
-  final TextEditingController _folderNameController = TextEditingController();
-  DateTime? _conductedTime;
 
+  DateTime? _conductedTime;
   final ImagePicker _picker = ImagePicker();
 
   // Select multiple images
@@ -79,11 +80,13 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
+
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
+
       if (pickedTime != null) {
         setState(() {
           _conductedTime = DateTime(
@@ -98,6 +101,12 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
     }
   }
 
+  // Function to get formatted date-time
+  String get formattedDateTime {
+    if (_conductedTime == null) return '';
+    return DateFormat('dd-MM-yyyy h:mm a').format(_conductedTime!);
+  }
+
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -106,7 +115,6 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
       print('Sport Name: $_sportName');
       print('Event Name: $_eventName');
       print('Gallery Title: $_galleryTitle');
-      print('Folder Name: $_folderName');
       print('Gallery Type: $_galleryType');
       print('Conducted Time: $_conductedTime');
       print('Status: $_status');
@@ -131,9 +139,9 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         foregroundColor: AppColors.background,
-        title: Text('Gallery', style: TextStyle(color: AppColors.textPrimary)),
+        title: Text('Gallery', style: TextStyle(color: AppColors.background)),
         backgroundColor: AppColors.bluePrimaryDual,
-        iconTheme: IconThemeData(color: AppColors.iconLightColor),
+        iconTheme: IconThemeData(color: AppColors.background),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -143,7 +151,6 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sport ID
                 const SizedBox(height: 30),
                 // Sport Name
                 MyTextFormFieldBox(
@@ -172,23 +179,24 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
                   onChanged: (value) => _galleryTitle = value,
                 ),
                 const SizedBox(height: 16),
-                // Folder Name (only for images)
-                if (_galleryType == 'Image')
-                  MyTextFormFieldBox(
-                    controller: _folderNameController,
-                    labelText: 'Folder Name',
-                    validator: (value) => value!.isEmpty
-                        ? 'Folder Name is required for images'
-                        : null,
-                    onChanged: (value) => _folderName = value,
-                  ),
+
+                // Conducted Time
+                MyTextFormFieldBox(
+                  controller: TextEditingController(text: formattedDateTime),
+                  readOnly: true,
+                  labelText: 'Conducted Time',
+                  onTap: _pickDateTime,
+                  validator: (_) => _conductedTime == null
+                      ? 'Conducted Time is required'
+                      : null,
+                ),
+
                 const SizedBox(height: 16),
                 // Gallery Type
                 DropdownButtonFormField<String>(
                   value: _galleryType,
                   decoration: InputDecoration(
                     labelText: 'Gallery Type',
-                    labelStyle: TextStyle(color: AppColors.textSecondary),
                     filled: true,
                     fillColor: AppColors.cardBackground,
                     border: OutlineInputBorder(),
@@ -207,26 +215,13 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
                     });
                   },
                 ),
-                const SizedBox(height: 16),
-                // Conducted Time
-                MyTextFormFieldBox(
-                  controller: TextEditingController(
-                    text: _conductedTime?.toString() ?? '',
-                  ),
-                  readOnly: true,
-                  labelText: 'Conducted Time',
-                  onTap: _pickDateTime,
-                  validator: (_) => _conductedTime == null
-                      ? 'Conducted Time is required'
-                      : null,
-                ),
+
                 const SizedBox(height: 16),
                 // Status
                 DropdownButtonFormField<String>(
                   value: _status,
                   decoration: InputDecoration(
                     labelText: 'Status',
-                    labelStyle: TextStyle(color: AppColors.textSecondary),
                     filled: true,
                     fillColor: AppColors.cardBackground,
                     border: OutlineInputBorder(),
@@ -239,6 +234,7 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
                   onChanged: (value) => setState(() => _status = value!),
                 ),
                 const SizedBox(height: 16),
+
                 // Image/Video Section
                 if (_galleryType == 'Image') ...[
                   ElevatedButton.icon(
@@ -251,12 +247,7 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (_images.isNotEmpty) ...[
-                    Text(
-                      'Selected Images:',
-                      style: TextStyle(color: AppColors.textPrimary),
-                    ),
-                    const SizedBox(height: 8),
+                  if (_images.isNotEmpty)
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -293,7 +284,6 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
                         );
                       }).toList(),
                     ),
-                  ],
                 ] else ...[
                   MyTextFormFieldBox(
                     controller: _videoLinkController,
@@ -304,32 +294,26 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (_videoLinks.isNotEmpty) ...[
-                    Text(
-                      'Added Video Links:',
-                      style: TextStyle(color: AppColors.textPrimary),
-                    ),
-                    const SizedBox(height: 8),
-                    ..._videoLinks.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      String link = entry.value;
-                      return ListTile(
-                        title: Text(
-                          link,
-                          style: TextStyle(color: AppColors.textSecondary),
-                          overflow: TextOverflow.ellipsis,
+                  ..._videoLinks.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    String link = entry.value;
+                    return ListTile(
+                      title: Text(
+                        link,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(
+                          Icons.remove_circle,
+                          color: AppColors.iconRed,
                         ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.remove_circle,
-                            color: AppColors.iconRed,
-                          ),
-                          onPressed: () => _removeVideoLink(index),
-                        ),
-                      );
-                    }).toList(),
-                  ],
+                        onPressed: () => _removeVideoLink(index),
+                      ),
+                    );
+                  }).toList(),
                 ],
+
                 const SizedBox(height: 24),
                 Center(
                   child: ElevatedButton(
