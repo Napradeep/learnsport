@@ -1,4 +1,3 @@
-// utils/network_utils.dart
 import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -32,8 +31,8 @@ class NetworkUtils {
       onRequest: (options, handler) async {
         final path = options.path;
 
-        // 🔓 Public endpoints (no token needed)
-        final publicEndpoints = [
+        // Public endpoints (no token required)
+        const publicEndpoints = [
           '/user/login',
           '/user/register',
           '/admin/login',
@@ -48,21 +47,15 @@ class NetworkUtils {
         if (!isPublic) {
           final token = await UserPreferences.getToken();
 
-          if (token == null) {
-            log('🚫 Missing token for secured request: $path');
-            return handler.reject(
-              DioException(
-                requestOptions: options,
-                error: 'Missing access token.',
-                type: DioExceptionType.badResponse,
-              ),
-            );
+          if (token == null || token.isEmpty) {
+            log('🚫 No token found for $path');
+          } else {
+            log('✅ Token found for $path');
+            log('🔑 TOKEN: $token');
+            options.headers['Authorization'] = 'Bearer $token';
           }
-
-          options.headers.addAll({'Authorization': 'Bearer $token'});
         } else {
-          options.headers = {'Content-Type': 'application/json'};
-          log('🌐 Public endpoint: $path — no Authorization header added');
+          log('🌐 Public endpoint: $path — no Authorization header');
         }
 
         // Debug logs
@@ -86,7 +79,7 @@ class NetworkUtils {
     );
   }
 
-  /// Generic request method
+  /// Generic network request
   Future<Response?> request<T>({
     required String endpoint,
     required HttpMethod method,
@@ -108,45 +101,67 @@ class NetworkUtils {
     }
   }
 
-  /// Error handler with UI feedback
+  /// Handles all Dio/network errors and shows UI messages
   void _handleError(DioException error) {
     final statusCode = error.response?.statusCode;
+    final responseData = error.response?.data;
+
+    // Try to extract readable message from the API
+    String? apiMessage;
+
+    if (responseData is Map<String, dynamic>) {
+      apiMessage =
+          responseData['message'] ??
+          responseData['error'] ??
+          responseData['detail'] ??
+          responseData['msg'];
+    } else if (responseData is String) {
+      apiMessage = responseData;
+    }
+
+    log('⚠️ API Error Message: $apiMessage');
 
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        Messenger.alertError('Request timed out. Please try again.');
+        Messenger.alertError('⏳ Request timed out. Please try again.');
         break;
 
       case DioExceptionType.badResponse:
         if (statusCode == 401) {
-          Messenger.alertError('Unauthorized. Please login again.');
+          Messenger.alertError(
+            apiMessage ?? '🔒 Unauthorized. Please login again.',
+          );
         } else if (statusCode != null && statusCode >= 500) {
-          Messenger.alertError('Server error. Please try again later.');
+          Messenger.alertError(
+            apiMessage ?? '⚠️ Server error. Please try again later.',
+          );
         } else {
-          Messenger.alertError('Something went wrong. Try again.');
+          Messenger.alertError(
+            apiMessage ?? '❌ Something went wrong. Try again.',
+          );
         }
         break;
 
       case DioExceptionType.cancel:
-        Messenger.alertError('Request was cancelled.');
+        Messenger.alertError('🚫 Request was cancelled.');
         break;
 
       case DioExceptionType.unknown:
         if (error.error is SocketException) {
-          Messenger.alertError('No Internet connection.');
+          Messenger.alertError('📡 No Internet connection.');
         } else {
-          Messenger.alertError('Unexpected error occurred.');
+          Messenger.alertError(apiMessage ?? '❗ Unexpected error occurred.');
         }
         break;
 
       default:
-        Messenger.alertError('Something went wrong.');
+        Messenger.alertError(apiMessage ?? '⚠️ Something went wrong.');
     }
   }
 
-  /// ✅ Check network availability
+  /// Network connectivity check
   Future<bool> isNetworkAvailable() async {
     try {
       final result = await InternetAddress.lookup('example.com');

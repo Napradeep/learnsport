@@ -1,5 +1,7 @@
-// settings_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sportspark/screens/home_screen.dart';
+import 'package:sportspark/screens/login/provider/auth_provider.dart';
 import 'package:sportspark/screens/login/view/change_password.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
@@ -12,12 +14,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notifications = true;
-  bool _darkMode = false;
-  String _selectedLanguage = 'English';
-
-  final List<String> _languages = ['English', 'Hindi', 'Spanish'];
-
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -68,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: const Text('Change Password'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
-                        MyRouter.push(screen: ChangePasswordScreen());
+                        MyRouter.push(screen: const ChangePasswordScreen());
                       },
                     ),
                     const Divider(height: 1),
@@ -76,10 +72,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       leading: const Icon(Icons.logout, color: Colors.red),
                       title: const Text('Logout'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Logging out...')),
+                      onTap: () async {
+                        final userProvider = Provider.of<AuthProvider>(
+                          context,
+                          listen: false,
                         );
+                        await userProvider.logout(context);
+
+                        // Navigate to login screen after logout
+                        MyRouter.pushRemoveUntil(screen: HomeScreen());
                       },
                     ),
                   ],
@@ -100,13 +101,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.info,
-                    color: AppColors.bluePrimaryDual,
-                  ),
-                  title: const Text('App Version'),
-                  subtitle: const Text('1.0.0'),
+                child: const ListTile(
+                  leading: Icon(Icons.info, color: AppColors.bluePrimaryDual),
+                  title: Text('App Version'),
+                  subtitle: Text('1.0.0'),
                 ),
               ),
             ],

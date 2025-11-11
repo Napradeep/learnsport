@@ -16,54 +16,71 @@ class AddEditSportScreen extends StatefulWidget {
 class _AddEditSportScreenState extends State<AddEditSportScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _groundnameController = TextEditingController();
-  final TextEditingController _actualPriceController = TextEditingController();
-  final TextEditingController _finalPriceController = TextEditingController();
-  final TextEditingController _aboutController = TextEditingController();
-  final TextEditingController _halfgroundController = TextEditingController();
-  final TextEditingController _fullgroundController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _groundNameController;
+  late final TextEditingController _actualPriceController;
+  late final TextEditingController _finalPriceController;
+  late final TextEditingController _aboutController;
+  late final TextEditingController _halfLightController;
+  late final TextEditingController _fullLightController;
 
-  String _status = 'Active';
   File? _sportImage;
   File? _bannerImage;
+  String _status = 'AVAILABLE';
 
   @override
   void initState() {
     super.initState();
-    if (widget.sport != null) {
-      _nameController.text = widget.sport!['sport_name'] ?? '';
-      _actualPriceController.text =
-          widget.sport!['sport_actual_price_per_slot']?.toString() ?? '';
-      _finalPriceController.text =
-          widget.sport!['sport_final_price_per_slot']?.toString() ?? '';
-      _aboutController.text = widget.sport!['about_sport'] ?? '';
-      _status = widget.sport!['status'] ?? 'Active';
-      _groundnameController.text = widget.sport!['ground_name'] ?? '';
-    }
+    _nameController = TextEditingController(text: widget.sport?['name'] ?? '');
+    _groundNameController = TextEditingController(
+      text: widget.sport?['ground_name'] ?? '',
+    );
+    _actualPriceController = TextEditingController(
+      text: widget.sport?['actual_price_per_slot']?.toString() ?? '',
+    );
+    _finalPriceController = TextEditingController(
+      text: widget.sport?['final_price_per_slot']?.toString() ?? '',
+    );
+    _aboutController = TextEditingController(
+      text: widget.sport?['about'] ?? '',
+    );
+    _halfLightController = TextEditingController(
+      text: widget.sport?['sport_lighting_price_half']?.toString() ?? '',
+    );
+    _fullLightController = TextEditingController(
+      text: widget.sport?['sport_lighting_price_full']?.toString() ?? '',
+    );
+
+    final apiStatus = (widget.sport?['status'] ?? 'AVAILABLE')
+        .toString()
+        .toUpperCase();
+    _status = apiStatus == 'AVAILABLE' ? 'AVAILABLE' : 'NOT_AVAILABLE';
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _groundnameController.dispose();
+    _groundNameController.dispose();
     _actualPriceController.dispose();
     _finalPriceController.dispose();
     _aboutController.dispose();
-    _halfgroundController.dispose();
-    _fullgroundController.dispose();
+    _halfLightController.dispose();
+    _fullLightController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage(bool isBanner) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked != null) {
       setState(() {
         if (isBanner) {
-          _bannerImage = File(pickedFile.path);
+          _bannerImage = File(picked.path);
         } else {
-          _sportImage = File(pickedFile.path);
+          _sportImage = File(picked.path);
         }
       });
     }
@@ -72,52 +89,41 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
   void _saveSport() {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_sportImage == null && widget.sport == null) {
-      Messenger.alertError('Sport image is required');
+    final actual = double.tryParse(_actualPriceController.text) ?? 0;
+    final finalP = double.tryParse(_finalPriceController.text) ?? 0;
+
+    if (finalP > actual) {
+      Messenger.alertError('Final price cannot exceed actual price');
       return;
     }
 
-    final actualPrice =
-        double.tryParse(_actualPriceController.text.trim()) ?? 0.0;
-    final finalPrice =
-        double.tryParse(_finalPriceController.text.trim()) ?? 0.0;
-
-    if (finalPrice > actualPrice) {
-      Messenger.alertError('Final price cannot be greater than actual price');
-      return;
-    }
-
-    final sportData = {
-      'sport_name': _nameController.text.trim(),
-      'ground_name': _groundnameController.text.trim(),
-      'sport_actual_price_per_slot': actualPrice,
-      'sport_final_price_per_slot': finalPrice,
-      'about_sport': _aboutController.text.trim(),
+    final data = {
+      'name': _nameController.text.trim(),
+      'ground_name': _groundNameController.text.trim(),
+      'actual_price_per_slot': actual,
+      'final_price_per_slot': finalP,
+      'about': _aboutController.text.trim(),
+      'sport_lighting_price_half': _halfLightController.text.trim().isEmpty
+          ? '0'
+          : _halfLightController.text.trim(),
+      'sport_lighting_price_full': _fullLightController.text.trim().isEmpty
+          ? '0'
+          : _fullLightController.text.trim(),
       'status': _status,
-      'sport_image': _sportImage?.path,
-      'sport_banner': _bannerImage?.path,
-      'half_ground': _halfgroundController.text.trim(),
-      'full_ground': _fullgroundController.text.trim(),
+      'image': _sportImage,
+      'banner': _bannerImage,
     };
 
-    // Show confirmation dialog before saving
     CustomConfirmationDialog.show(
       context: context,
       title: widget.sport != null ? 'Update Sport' : 'Add Sport',
-      message: widget.sport != null
-          ? 'Are you sure you want to update this sport?'
-          : 'Are you sure you want to add this sport?',
+      message: widget.sport != null ? 'Update this sport?' : 'Add this sport?',
       icon: widget.sport != null ? Icons.edit : Icons.add,
       iconColor: widget.sport != null ? Colors.orange : Colors.green,
-      backgroundColor: Colors.white,
-      textColor: Colors.black87,
       confirmColor: AppColors.bluePrimaryDual,
-      onConfirm: () {
-        Navigator.pop(context, sportData);
-        Messenger.alertSuccess(
-          widget.sport != null ? 'Sport Updated!' : 'Sport Added!',
-        );
-      },
+      onConfirm: () => Navigator.pop(context, data),
+      backgroundColor: AppColors.background,
+      textColor: AppColors.textPrimary,
     );
   }
 
@@ -130,13 +136,6 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
           color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade400),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
         ),
         child: image != null
             ? ClipRRect(
@@ -146,11 +145,11 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.image, size: 40, color: Colors.grey.shade400),
+                  Icon(Icons.image, size: 40, color: Colors.grey.shade500),
                   const SizedBox(height: 8),
                   Text(
                     label,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
                   ),
                 ],
               ),
@@ -158,26 +157,29 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    TextInputType type = TextInputType.text,
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
     bool required = true,
-    String? Function(String?)? customValidator,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: type,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 16,
+        ),
       ),
       validator: (value) {
-        if (required && (value == null || value.isEmpty)) {
+        if (required && (value == null || value.trim().isEmpty)) {
           return '$label is required';
         }
-        if (customValidator != null) return customValidator(value);
-        return null;
+        return validator?.call(value);
       },
     );
   }
@@ -187,15 +189,16 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        foregroundColor: Colors.white,
         title: Text(widget.sport != null ? 'Edit Sport' : 'Add Sport'),
         backgroundColor: AppColors.bluePrimaryDual,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 500),
+            constraints: const BoxConstraints(maxWidth: 600),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
@@ -213,7 +216,6 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header
                   Row(
                     children: [
                       CircleAvatar(
@@ -241,112 +243,116 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  _buildTextField('Sport Name', _nameController),
-                  const SizedBox(height: 16),
-
-                  _buildTextField('Ground Name', _groundnameController),
-                  const SizedBox(height: 16),
-
                   _buildTextField(
-                    'Actual Price per Slot',
-                    _actualPriceController,
-                    type: TextInputType.number,
-                    customValidator: (value) {
-                      final price = double.tryParse(value ?? '');
-                      if (price == null || price <= 0) {
-                        return 'Enter a valid actual price';
-                      }
-                      return null;
-                    },
+                    label: 'Sport Name',
+                    controller: _nameController,
                   ),
                   const SizedBox(height: 16),
-
                   _buildTextField(
-                    'Final Price per Slot',
-                    _finalPriceController,
-                    type: TextInputType.number,
-                    customValidator: (value) {
-                      final finalPrice = double.tryParse(value ?? '');
-                      final actualPrice =
+                    label: 'Ground Name',
+                    controller: _groundNameController,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    label: 'Actual Price',
+                    controller: _actualPriceController,
+                    keyboardType: TextInputType.number,
+                    validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0
+                        ? 'Enter valid price'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    label: 'Final Price',
+                    controller: _finalPriceController,
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      final f = double.tryParse(v ?? '') ?? 0;
+                      final a =
                           double.tryParse(_actualPriceController.text) ?? 0;
-                      if (finalPrice == null || finalPrice < 0) {
-                        return 'Enter a valid final price';
-                      }
-                      if (finalPrice > actualPrice) {
-                        return 'Final price cannot exceed actual price';
-                      }
-                      return null;
+                      return f > a ? 'Cannot exceed actual price' : null;
                     },
                   ),
-
                   const SizedBox(height: 16),
-
                   Row(
                     children: [
-                      Text("Lightning Price:"),
-                      //Text.rich()
-                      SizedBox(width: 10),
+                      const Text(
+                        'Lighting Price:',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: _buildTextField(
-                          'Half Ground',
-                          _halfgroundController,
-                          type: TextInputType.number,
-                          required: false,
+                          label: 'Half Ground',
+                          controller: _halfLightController,
+                          keyboardType: TextInputType.number,
+                          required: true, // ✅ Make required
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Half Ground price required';
+                            }
+                            if ((double.tryParse(v) ?? 0) <= 0) {
+                              return 'Enter valid price';
+                            }
+                            return null;
+                          },
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: _buildTextField(
-                          'Full Ground',
-                          _fullgroundController,
-                          type: TextInputType.number,
-                          required: false,
+                          label: 'Full Ground',
+                          controller: _fullLightController,
+                          keyboardType: TextInputType.number,
+                          required: true, // ✅ Make required
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Full Ground price required';
+                            }
+                            if ((double.tryParse(v) ?? 0) <= 0) {
+                              return 'Enter valid price';
+                            }
+                            return null;
+                          },
                         ),
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 16),
-
                   _buildTextField(
-                    'About Sport',
-                    _aboutController,
-                    customValidator: (value) {
-                      if ((value?.length ?? 0) < 10) {
-                        return 'About Sport should be at least 10 characters';
-                      }
-                      return null;
-                    },
+                    label: 'About Sport',
+                    controller: _aboutController,
+                    validator: (v) =>
+                        (v?.length ?? 0) < 10 ? 'Min 10 characters' : null,
                   ),
                   const SizedBox(height: 16),
-
-                  // Status toggle
                   Row(
                     children: [
                       const Text('Status:', style: TextStyle(fontSize: 16)),
                       const SizedBox(width: 16),
                       Expanded(
                         child: ToggleButtons(
-                          borderRadius: BorderRadius.circular(12),
                           isSelected: [
-                            _status == 'Active',
-                            _status == 'Inactive',
+                            _status == 'AVAILABLE',
+                            _status == 'NOT_AVAILABLE',
                           ],
-                          onPressed: (index) {
-                            setState(() {
-                              _status = index == 0 ? 'Active' : 'Inactive';
-                            });
-                          },
+                          onPressed: (i) => setState(
+                            () => _status = i == 0
+                                ? 'AVAILABLE'
+                                : 'NOT_AVAILABLE',
+                          ),
+                          borderRadius: BorderRadius.circular(12),
                           selectedColor: Colors.white,
                           fillColor: AppColors.bluePrimaryDual,
                           children: const [
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('Active'),
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text('Available'),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('Inactive'),
+                              padding: EdgeInsets.symmetric(horizontal: 20),
+                              child: Text('Not Available'),
                             ),
                           ],
                         ),
@@ -354,13 +360,11 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  // Image Pickers
                   Row(
                     children: [
                       Expanded(
                         child: _buildImagePicker(
-                          'Pick Sport Image',
+                          'Sport Image',
                           _sportImage,
                           false,
                         ),
@@ -368,7 +372,7 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildImagePicker(
-                          'Pick Banner Image',
+                          'Banner Image',
                           _bannerImage,
                           true,
                         ),
@@ -376,8 +380,6 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                     ],
                   ),
                   const SizedBox(height: 32),
-
-                  // Save Button
                   ElevatedButton(
                     onPressed: _saveSport,
                     style: ElevatedButton.styleFrom(
@@ -390,9 +392,9 @@ class _AddEditSportScreenState extends State<AddEditSportScreen> {
                     child: Text(
                       widget.sport != null ? 'Update Sport' : 'Add Sport',
                       style: const TextStyle(
-                        color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),

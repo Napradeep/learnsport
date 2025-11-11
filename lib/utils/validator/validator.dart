@@ -40,10 +40,35 @@ class InputValidator {
     return null;
   }
 
+  static String? validateFatherName(String? name) {
+    if (name == null || name.isEmpty) return 'Please enter father name';
+    if (name.length < 2) return 'Name must be at least 2 characters';
+    return null;
+  }
+
   static String? validateMobile(String? mobile) {
     if (mobile == null || mobile.isEmpty) return 'Please enter mobile number';
     if (!RegExp(r'^[0-9]{10}$').hasMatch(mobile)) {
       return 'Enter a valid 10-digit mobile number';
+    }
+    return null;
+  }
+
+  /// ✅ Validate Address
+  static String? validateAddress(String? address) {
+    if (address == null || address.isEmpty) return 'Please enter address';
+    if (address.length < 5) return 'Address must be at least 5 characters';
+    return null;
+  }
+
+  /// ✅ Validate Native Place
+  static String? validateNativePlace(String? nativePlace) {
+    if (nativePlace == null || nativePlace.isEmpty) {
+      return 'Please enter native place';
+    }
+    if (nativePlace.length < 2) return 'Native place must be at least 2 characters';
+    if (!RegExp(r"^[a-zA-Z\s]+$").hasMatch(nativePlace)) {
+      return 'Native place must contain only letters';
     }
     return null;
   }

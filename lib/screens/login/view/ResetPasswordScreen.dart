@@ -1,60 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sportspark/screens/login/provider/auth_provider.dart';
-import 'package:sportspark/screens/login/view/ResetPasswordScreen.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/snackbar/snackbar.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+class ResetPasswordScreen extends StatefulWidget {
+  final String email;
+  const ResetPasswordScreen({super.key, required this.email});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _tokenController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _tokenController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _sendResetLink() async {
+  Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.forgotPassword(
-      _emailController.text.trim(),
+
+    final success = await authProvider.resetPassword(
+      _tokenController.text.trim(),
+      _passwordController.text.trim(),
     );
 
     setState(() => _isLoading = false);
 
     if (success) {
-      Messenger.alertSuccess("Reset link sent to your email!");
-
-      MyRouter.push(
-        screen: ResetPasswordScreen(email: _emailController.text.trim()),
-      );
+      Messenger.alertSuccess("Password reset successful!");
+      MyRouter.pop();
+      MyRouter.pop();
     } else {
-      Messenger.alertError("Failed to send reset link. Try again.");
+      Messenger.alertError(
+        "Failed to reset password. Check token and try again.",
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Forgot Password'),
+        title: const Text('Reset Password'),
         foregroundColor: Colors.white,
         backgroundColor: AppColors.bluePrimaryDual,
       ),
@@ -79,78 +80,77 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset('assets/applogo.png', height: 100),
+                  const Icon(
+                    Icons.lock_reset,
+                    size: 80,
+                    color: AppColors.bluePrimaryDual,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
-                    "Forgot Password?",
+                    "Reset Your Password",
                     style: TextStyle(
-                      fontSize: 26,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: AppColors.bluePrimaryDual,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Enter your registered email to receive a reset link.",
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                    textAlign: TextAlign.center,
-                  ),
                   const SizedBox(height: 30),
+
+                  /// Token Field
                   TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _tokenController,
                     decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      hintText: 'Enter your email',
-                      prefixIcon: const Icon(Icons.email, color: Colors.grey),
+                      labelText: 'Reset Token',
+                      prefixIcon: const Icon(Icons.vpn_key),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Email is required';
-                      } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Token is required' : null,
+                  ),
+                  const SizedBox(height: 20),
+
+                  /// New Password Field
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      prefixIcon: const Icon(Icons.lock),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    validator: (v) => v == null || v.length < 6
+                        ? 'Password must be at least 6 characters'
+                        : null,
                   ),
                   const SizedBox(height: 30),
+
+                  /// Submit Button
                   SizedBox(
-                    width: width,
+                    width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.bluePrimaryDual,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      onPressed: _isLoading ? null : _sendResetLink,
+                      onPressed: _isLoading ? null : _resetPassword,
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                              'Send Reset Link',
+                              'Update Password',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
                             ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Back to Login',
-                      style: TextStyle(
-                        color: AppColors.bluePrimaryDual,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
                   ),
                 ],

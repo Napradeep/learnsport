@@ -254,7 +254,7 @@ class _PaymentDeatilsState extends State<PaymentDeatils>
                           message: dialogMessage,
                           icon: Icons.payment,
                           onConfirm: () {
-                            Messenger.alertSuccess('Payment successful ✅');
+                            Messenger.alertSuccess('Payment successful');
                             MyRouter.pushRemoveUntil(
                               screen: const HomeScreen(),
                             );

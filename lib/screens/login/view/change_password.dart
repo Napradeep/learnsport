@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sportspark/screens/login/provider/auth_provider.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/snackbar/snackbar.dart';
+import 'package:sportspark/utils/widget/custom_text_field.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -29,21 +32,35 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     super.dispose();
   }
 
-  void _updatePassword() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _updatePassword() async {
+    if (!_formKey.currentState!.validate()) {
+      // Clear confirm field if validation fails for better UX
+      _confirmPasswordController.clear();
+      return;
+    }
 
     setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() => _isLoading = false);
-      Messenger.alertSuccess('Password updated successfully!');
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    bool success = await authProvider.updatePassword(
+      _currentPasswordController.text.trim(),
+      _newPasswordController.text.trim(),
+    );
+
+    setState(() => _isLoading = false);
+
+    if (success) {
+      Messenger.alertSuccess('Password updated successfully');
       MyRouter.pop();
-    });
+    } else {
+      Messenger.alertError('❌ Failed to update password. Try again!');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -72,11 +89,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset('assets/applogo.png', height: 100),
                   const SizedBox(height: 16),
-
                   const Text(
                     "Change Password",
                     style: TextStyle(
@@ -85,92 +100,69 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       color: AppColors.bluePrimaryDual,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Enter your current password and choose a new one.",
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                    textAlign: TextAlign.center,
-                  ),
+
                   const SizedBox(height: 30),
 
-                  TextFormField(
+                  /// Current Password
+                  MyTextFormFieldBox(
                     controller: _currentPasswordController,
+                    labelText: 'Current Password',
+                    icon: const Icon(Icons.lock_outline),
                     obscureText: !_showCurrent,
-                    decoration: InputDecoration(
-                      labelText: 'Current Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _showCurrent
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                        onPressed: () =>
-                            setState(() => _showCurrent = !_showCurrent),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showCurrent ? Icons.visibility : Icons.visibility_off,
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      onPressed: () =>
+                          setState(() => _showCurrent = !_showCurrent),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter your current password';
-                      }
-                      return null;
-                    },
+                    validator: (value) =>
+                        value!.isEmpty ? 'Enter your current password' : null,
                   ),
                   const SizedBox(height: 20),
 
-                  TextFormField(
+                  /// New Password
+                  MyTextFormFieldBox(
                     controller: _newPasswordController,
+                    labelText: 'New Password',
+                    icon: const Icon(Icons.lock_reset),
                     obscureText: !_showNew,
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      prefixIcon: const Icon(Icons.lock_reset),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _showNew ? Icons.visibility : Icons.visibility_off,
-                        ),
-                        onPressed: () => setState(() => _showNew = !_showNew),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showNew ? Icons.visibility : Icons.visibility_off,
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      onPressed: () => setState(() => _showNew = !_showNew),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter a new password';
-                      } else if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                      if (value!.isEmpty) return 'Enter a new password';
+                      if (value.length < 6) return 'Min 6 characters required';
+                      // Optional: Basic strength check
+                      if (!RegExp(
+                        r'(?=.*[a-z])(?=.*[A-Z])|(?=.*\d)',
+                      ).hasMatch(value)) {
+                        return 'Use at least one uppercase, lowercase, or number';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 20),
 
-                  TextFormField(
+                  /// Confirm Password
+                  MyTextFormFieldBox(
                     controller: _confirmPasswordController,
+                    labelText: 'Confirm Password',
+                    icon: const Icon(Icons.check_circle_outline),
                     obscureText: !_showConfirm,
-                    decoration: InputDecoration(
-                      labelText: 'Confirm Password',
-                      prefixIcon: const Icon(Icons.check_circle_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _showConfirm
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                        onPressed: () =>
-                            setState(() => _showConfirm = !_showConfirm),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showConfirm ? Icons.visibility : Icons.visibility_off,
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      onPressed: () =>
+                          setState(() => _showConfirm = !_showConfirm),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Confirm your password';
-                      } else if (value != _newPasswordController.text) {
+                      if (value!.isEmpty) return 'Confirm your password';
+                      if (value != _newPasswordController.text) {
                         return 'Passwords do not match';
                       }
                       return null;
@@ -178,6 +170,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ),
                   const SizedBox(height: 30),
 
+                  /// Button
                   SizedBox(
                     width: width,
                     child: ElevatedButton(
@@ -201,7 +194,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 20),
                 ],
               ),
             ),

@@ -1,9 +1,11 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:sportspark/screens/admin_screen.dart';
 import 'package:sportspark/screens/details_screen.dart';
 import 'package:sportspark/screens/login/view/login_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
+import 'package:sportspark/utils/shared/shared_pref.dart';
 import 'package:sportspark/utils/widget/drawer_menu.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -54,9 +56,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     },
   ];
 
+  String? role;
+
+  Future<void> _loadUserData() async {
+    final fetchedRole = await UserPreferences.getRole();
+
+    if (mounted) {
+      setState(() {
+        role = fetchedRole ?? "Unknown";
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 900),
       vsync: this,
@@ -123,7 +138,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             // Login text button
             GestureDetector(
               onTap: () {
-                MyRouter.push(screen: const LoginScreen());
+                if (role == "USER" ||
+                    role == "ADMIN" ||
+                    role == "SUPER_ADMIN") {
+                  //MyProfileScreen
+                  MyRouter.push(screen: AdminScreen(heading: role));
+                } else {
+                  MyRouter.push(screen: const LoginScreen());
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 7.0),
@@ -151,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
 
-        drawer: const DrawerMenu(),
+        drawer: DrawerMenu(isAdmin: role ?? ""),
         body: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(

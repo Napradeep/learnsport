@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sportspark/screens/home_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
+import 'package:sportspark/utils/router/router.dart';
+import 'package:sportspark/utils/shared/shared_pref.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -95,12 +97,22 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(_bgController);
 
     // Navigate after 4 seconds
-    Timer(const Duration(seconds: 8), () {
+    Timer(const Duration(seconds: 6), () async {
+      bool isLoggedIn = await UserPreferences.isLoggedIn();
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-      );
+
+      if (!isLoggedIn) {
+        MyRouter.pushRemoveUntil(screen: HomeScreen());
+      } else {
+        String? role = await UserPreferences.getRole();
+        if (role == 'ADMIN' || role == 'SUPER_ADMIN') {
+          MyRouter.pushRemoveUntil(screen: HomeScreen());
+        } else if (role == 'USER') {
+          MyRouter.pushRemoveUntil(screen: HomeScreen());
+        } else {
+          MyRouter.pushRemoveUntil(screen: HomeScreen());
+        }
+      }
     });
   }
 

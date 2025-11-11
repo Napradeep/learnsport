@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:sportspark/screens/home_screen.dart';
+import 'package:sportspark/screens/sportslist/sports_provider.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/validator/validator.dart';
+import 'package:sportspark/utils/widget/common_dropdown.dart';
 import 'package:sportspark/utils/widget/custom_text_field.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -15,32 +18,24 @@ class ContactScreen extends StatefulWidget {
 
 class _ContactScreenState extends State<ContactScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _fatherNameController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _enquiryController = TextEditingController();
   final TextEditingController _nativeController = TextEditingController();
-  //_nativeController
-  String? _selectedContactType;
-  // Add this at the top of your State class
-  bool _contactTypeHasError = false;
 
-  final List<String> _contactTypes = [
-    'General',
-    'Skating',
-    'Pickle Ball',
-    'Basketball',
-    'Kabaddi',
-    'Football (Turf) 14,000 sqft',
-    'Karate',
-    'Volleyball',
-    'Athletic Track',
-    'Cricket (Turf)',
-    'Archery',
-    'Cricket (Net Practice)',
-    'Badminton (Outdoor)',
-  ];
+  String? _selectedContactType = 'General';
+
+  @override
+  void initState() {
+    super.initState();
+    // Load sports on first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<SportsProvider>(context, listen: false).loadSports();
+    });
+  }
 
   @override
   void dispose() {
@@ -49,12 +44,14 @@ class _ContactScreenState extends State<ContactScreen> {
     _mobileController.dispose();
     _emailController.dispose();
     _enquiryController.dispose();
+    _nativeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
@@ -101,6 +98,7 @@ class _ContactScreenState extends State<ContactScreen> {
                         ),
                         const SizedBox(height: 22),
 
+                        // ── Text Fields (unchanged) ─────────────────────
                         MyTextFormFieldBox(
                           controller: _nameController,
                           labelText: 'Name',
@@ -109,24 +107,22 @@ class _ContactScreenState extends State<ContactScreen> {
                             Icons.person,
                             color: AppColors.iconLightColor,
                           ),
-                          validator: (value) =>
-                              InputValidator.validateName(value ?? ''),
+                          validator: (v) =>
+                              InputValidator.validateName(v ?? ''),
                         ),
                         const SizedBox(height: 16),
-
                         MyTextFormFieldBox(
                           controller: _fatherNameController,
                           labelText: 'Father Name',
-                          hinttext: 'Enter father\'s name',
+                          hinttext: "Enter father's name",
                           icon: const Icon(
                             Icons.person_outline,
                             color: AppColors.iconLightColor,
                           ),
-                          validator: (value) =>
-                              InputValidator.validateName(value ?? ''),
+                          validator: (v) =>
+                              InputValidator.validateName(v ?? ''),
                         ),
                         const SizedBox(height: 16),
-
                         MyTextFormFieldBox(
                           controller: _mobileController,
                           labelText: 'Mobile Number',
@@ -139,11 +135,10 @@ class _ContactScreenState extends State<ContactScreen> {
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
-                          validator: (value) =>
-                              InputValidator.validateMobile(value ?? ''),
+                          validator: (v) =>
+                              InputValidator.validateMobile(v ?? ''),
                         ),
                         const SizedBox(height: 16),
-
                         MyTextFormFieldBox(
                           controller: _emailController,
                           labelText: 'Email (Optional)',
@@ -153,9 +148,9 @@ class _ContactScreenState extends State<ContactScreen> {
                             Icons.email,
                             color: AppColors.iconLightColor,
                           ),
-                          validator: (value) {
-                            if (value != null && value.isNotEmpty) {
-                              return InputValidator.validateEmail(value);
+                          validator: (v) {
+                            if (v != null && v.isNotEmpty) {
+                              return InputValidator.validateEmail(v);
                             }
                             return null;
                           },
@@ -165,81 +160,26 @@ class _ContactScreenState extends State<ContactScreen> {
                           controller: _nativeController,
                           labelText: 'Native',
                           hinttext: 'Enter your native',
-                          keyboardType: TextInputType.emailAddress,
                           icon: const Icon(
                             Icons.location_history,
                             color: AppColors.iconLightColor,
                           ),
-                          validator: (value) {
-                            if (value != null && value.isNotEmpty) {
-                              return InputValidator.validateName(value);
-                            }
-                            return null;
-                          },
+                          validator: (v) =>
+                              InputValidator.validateAddress(v ?? ''),
                         ),
                         const SizedBox(height: 16),
 
-                        // Dropdown for Contact Type
-
-                        // Inside your build method, replace your DropdownButtonFormField with:
-                        DropdownButtonFormField<String>(
-                          value: _selectedContactType,
-                          decoration: InputDecoration(
-                            labelText: 'Contact Type',
-                            hintText: 'Select contact type',
-                            prefixIcon: const Icon(
-                              Icons.category_outlined,
-                              color: AppColors.iconLightColor,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: Color.fromARGB(255, 210, 65, 51),
-                                width: 1,
-                              ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: Color.fromARGB(255, 210, 65, 51),
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                          items: _contactTypes.map((String type) {
-                            return DropdownMenuItem<String>(
-                              value: type,
-                              child: Text(type),
+                        Consumer<SportsProvider>(
+                          builder: (context, provider, _) {
+                            return CommonDropdown(
+                              items: provider.sports,
+                              selectedValue: _selectedContactType,
+                              onChanged: (v) =>
+                                  setState(() => _selectedContactType = v),
+                              isLoading: provider.isLoading,
+                              error: provider.error,
                             );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedContactType = newValue;
-                            });
                           },
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Please select a contact type'
-                              : null,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
                         ),
 
                         const SizedBox(height: 16),
@@ -253,11 +193,12 @@ class _ContactScreenState extends State<ContactScreen> {
                             Icons.message,
                             color: AppColors.iconLightColor,
                           ),
-                          validator: (value) =>
-                              InputValidator.validateEnquiry(value ?? ''),
+                          validator: (v) =>
+                              InputValidator.validateEnquiry(v ?? ''),
                         ),
                         const SizedBox(height: 30),
 
+                        // ── Submit Button (unchanged) ───────────────────
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -286,102 +227,88 @@ class _ContactScreenState extends State<ContactScreen> {
                                 showGeneralDialog(
                                   context: context,
                                   barrierDismissible: false,
-                                  barrierLabel: '',
                                   transitionDuration: const Duration(
                                     milliseconds: 400,
                                   ),
-                                  pageBuilder:
-                                      (context, animation, secondaryAnimation) {
-                                        return const SizedBox.shrink();
-                                      },
-                                  transitionBuilder:
-                                      (
-                                        context,
-                                        animation,
-                                        secondaryAnimation,
-                                        child,
-                                      ) {
-                                        final curvedValue =
-                                            Curves.easeInOutBack.transform(
-                                              animation.value,
-                                            ) -
-                                            1.0;
-                                        return Transform(
-                                          transform: Matrix4.translationValues(
-                                            0.0,
-                                            curvedValue * -200,
-                                            0.0,
-                                          ),
-                                          child: Opacity(
-                                            opacity: animation.value,
-                                            child: AlertDialog(
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              title: Column(
-                                                children: const [
-                                                  Icon(
-                                                    Icons.check_circle_rounded,
-                                                    color: Colors.green,
-                                                    size: 70,
-                                                  ),
-                                                  SizedBox(height: 12),
-                                                  Text(
-                                                    "Success!",
-                                                    style: TextStyle(
-                                                      fontSize: 22,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.green,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              content: const Text(
-                                                "Your enquiry has been submitted successfully.\nOur team will reach out to you soon.",
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              actionsAlignment:
-                                                  MainAxisAlignment.center,
-                                              actions: [
-                                                ElevatedButton(
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor: AppColors
-                                                        .bluePrimaryDual,
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            12,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  onPressed: () =>
-                                                      MyRouter.pushRemoveUntil(
-                                                        screen:
-                                                            const HomeScreen(),
-                                                      ),
-                                                  child: const Padding(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          horizontal: 20,
-                                                          vertical: 10,
-                                                        ),
-                                                    child: Text(
-                                                      "OK",
-                                                      style: TextStyle(
-                                                        color: AppColors
-                                                            .background,
-                                                        fontSize: 16,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
+                                  pageBuilder: (_, __, ___) =>
+                                      const SizedBox.shrink(),
+                                  transitionBuilder: (ctx, anim, _, __) {
+                                    final curved =
+                                        Curves.easeInOutBack.transform(
+                                          anim.value,
+                                        ) -
+                                        1.0;
+                                    return Transform(
+                                      transform: Matrix4.translationValues(
+                                        0,
+                                        curved * -200,
+                                        0,
+                                      ),
+                                      child: Opacity(
+                                        opacity: anim.value,
+                                        child: AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
                                             ),
                                           ),
-                                        );
-                                      },
+                                          title: const Column(
+                                            children: [
+                                              Icon(
+                                                Icons.check_circle_rounded,
+                                                color: Colors.green,
+                                                size: 70,
+                                              ),
+                                              SizedBox(height: 12),
+                                              Text(
+                                                "Success!",
+                                                style: TextStyle(
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          content: const Text(
+                                            "Your enquiry has been submitted successfully.\nOur team will reach out to you soon.",
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          actionsAlignment:
+                                              MainAxisAlignment.center,
+                                          actions: [
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    AppColors.bluePrimaryDual,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              onPressed: () =>
+                                                  MyRouter.pushRemoveUntil(
+                                                    screen: const HomeScreen(),
+                                                  ),
+                                              child: const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 20,
+                                                  vertical: 10,
+                                                ),
+                                                child: Text(
+                                                  "OK",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               }
                             },

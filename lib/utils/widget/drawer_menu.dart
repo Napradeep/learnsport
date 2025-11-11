@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sportspark/screens/login/view/login_screen.dart';
 import 'package:sportspark/screens/sports_list.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 
 class DrawerMenu extends StatelessWidget {
-  const DrawerMenu({super.key});
+  final String isAdmin;
+  const DrawerMenu({super.key, required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +52,8 @@ class DrawerMenu extends StatelessWidget {
                 ],
               ),
             ),
+
+            /// ============ MENU ITEMS ============
             _buildDrawerItem(
               context,
               icon: Icons.sports,
@@ -61,25 +63,15 @@ class DrawerMenu extends StatelessWidget {
                 Navigator.pushNamed(context, '/sport_game');
               },
             ),
-
             _buildDrawerItem(
               context,
               icon: Icons.book_online,
               title: 'Book Slot',
               onTap: () {
                 Navigator.pop(context);
-                MyRouter.push(screen: SportsList());
+                MyRouter.push(screen: const SportsList());
               },
             ),
-            // _buildDrawerItem(
-            //   context,
-            //   icon: Icons.person,
-            //   title: 'My Profile',
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //     MyRouter.push(screen: MyProfileScreen());
-            //   },
-            // ),
             _buildDrawerItem(
               context,
               icon: Icons.photo_library,
@@ -107,30 +99,58 @@ class DrawerMenu extends StatelessWidget {
                 Navigator.pushNamed(context, '/about_us');
               },
             ),
-            const Divider(
-              height: 1,
-              thickness: 1,
-              color: Color.fromARGB(255, 245, 245, 245),
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.admin_panel_settings,
-              title: 'Admin Only',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/admin');
-              },
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.logout,
-              title: 'Logout',
-              color: AppColors.iconRed,
-              onTap: () {
-                Navigator.pop(context);
-                MyRouter.pushRemoveUntil(screen: LoginScreen());
-              },
-            ),
+
+            // isAdmin == "USER"
+            //     ? _buildDrawerItem(
+            //         context,
+            //         icon: Icons.admin_panel_settings,
+            //         title: 'User Dashborad',
+            //         onTap: () {
+            //           Navigator.pop(context);
+            //           Navigator.pushNamed(context, '/admin');
+            //         },
+            //       )
+            //     : isAdmin == "ADMIN"
+            //     ? _buildDrawerItem(
+            //         context,
+            //         icon: Icons.admin_panel_settings,
+            //         title: 'Admin Dashborad',
+            //         onTap: () {
+            //           Navigator.pop(context);
+            //           Navigator.pushNamed(context, '/admin');
+            //         },
+            //       )
+            //     : _buildDrawerItem(
+            //         context,
+            //         icon: Icons.admin_panel_settings,
+            //         title: 'User Dashborad',
+            //         onTap: () {
+            //           Navigator.pop(context);
+            //           Navigator.pushNamed(context, '/admin');
+            //         },
+            //       ),
+            // const Divider(
+            //   height: 1,
+            //   thickness: 1,
+            //   color: Color.fromARGB(255, 245, 245, 245),
+            // ),
+
+            /// LOGOUT
+            // _buildDrawerItem(
+            //   context,
+            //   icon: Icons.logout,
+            //   title: 'Logout',
+            //   color: AppColors.iconRed,
+            //   onTap: () async {
+            //     final authProvider = Provider.of<AuthProvider>(
+            //       context,
+            //       listen: false,
+            //     );
+
+            //     await authProvider.logout(context);
+            //     MyRouter.pushRemoveUntil(screen: const LoginScreen());
+            //   },
+            // ),
           ],
         ),
       ),

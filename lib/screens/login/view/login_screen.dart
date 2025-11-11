@@ -22,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _showNew = false;
 
   @override
   void dispose() {
@@ -40,17 +41,24 @@ class _LoginScreenState extends State<LoginScreen> {
       password: _passwordController.text.trim(),
     );
 
-    final success = await Provider.of<AuthProvider>(
-      context,
-      listen: false,
-    ).login(request, 'user');
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.login(request);
 
     setState(() => _isLoading = false);
 
     if (success) {
-      MyRouter.pushRemoveUntil(screen: const HomeScreen());
+      final user = authProvider.user;
+
+      // You can still use role to navigate if backend returns it
+      if (user?.role == 'ADMIN' || user?.role == 'SUPER_ADMIN') {
+        MyRouter.pushRemoveUntil(screen: HomeScreen());
+      } else if (user?.role == 'USER') {
+        MyRouter.pushRemoveUntil(screen: const HomeScreen());
+      } else {
+        Messenger.alertError('Unknown role. Contact support.');
+      }
     } else {
-      Messenger.alertError('Login failed. Please check your credentials.');
+      //  Messenger.alertError('Login failed. Please check your credentials.');
     }
   }
 
@@ -129,10 +137,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   /// 🔒 Password Field
                   MyTextFormFieldBox(
                     controller: _passwordController,
-                    obscureText: true,
+
                     hinttext: "Enter your password",
                     labelText: "Password",
                     icon: const Icon(Icons.lock, color: Colors.grey),
+                    obscureText: !_showNew,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showNew ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () => setState(() => _showNew = !_showNew),
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Password is required';
