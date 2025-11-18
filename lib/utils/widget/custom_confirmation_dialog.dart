@@ -1,121 +1,138 @@
 import 'package:flutter/material.dart';
 
 class CustomConfirmationDialog {
-  static void show({
+  static Future<bool?> show({
     required BuildContext context,
     required String title,
     required String message,
-    required VoidCallback onConfirm,
-    String confirmText = "Yes",
-    String cancelText = "No",
-    required Color confirmColor,
-    required Color iconColor,
-    IconData icon = Icons.delete_outline,
-    required Color backgroundColor,
-    required Color textColor,
-  }) {
-    showDialog(
+    required Future<void> Function() onConfirm,
+    String confirmText = "Confirm",
+    String cancelText = "Cancel",
+    Color confirmColor = Colors.red,
+
+    
+    Color iconColor = Colors.red,
+    IconData icon = Icons.help_outline,
+    Color backgroundColor = Colors.white,
+    Color textColor = Colors.black87,
+  }) async {
+    return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => Dialog(
-        backgroundColor: backgroundColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon Container
-              Container(
-                height: 60,
-                width: 60,
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
-                  shape: BoxShape.circle,
+      builder: (ctx) {
+        bool isLoading = false;
+
+        return PopScope(
+          canPop: !isLoading,
+          child: StatefulBuilder(
+            builder: (ctx, setState) {
+              return Dialog(
+                backgroundColor: backgroundColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Center(child: Icon(icon, color: iconColor, size: 30)),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Title
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 10),
-
-              // Message
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textColor.withOpacity(0.7),
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              // Buttons
-              Row(
-                children: [
-                  // Cancel Button
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey.shade400),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Icon
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: iconColor.withOpacity(0.15),
+                          shape: BoxShape.circle,
                         ),
+                        child: Icon(icon, size: 36, color: iconColor),
                       ),
-                      child: Text(
-                        cancelText,
-                        style: TextStyle(fontSize: 16, color: textColor),
+
+                      const SizedBox(height: 20),
+
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
+
+                      const SizedBox(height: 12),
+
+                      Text(
+                        message,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: textColor.withOpacity(0.8),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      Row(
+                        children: [
+                          // Cancel button
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed:
+                                  isLoading ? null : () => Navigator.pop(ctx, false),
+                              child: Text(cancelText),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          // CONFIRM button with loading
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () async {
+                                      setState(() => isLoading = true);
+
+                                      try {
+                                        await onConfirm();
+                                      } catch (e) {
+                                        debugPrint("Error in onConfirm(): $e");
+                                      }
+
+                                      if (ctx.mounted) {
+                                        Navigator.pop(ctx, true);
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: confirmColor,
+                              ),
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      confirmText,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(width: 12),
-
-                  // Confirm Button
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        onConfirm();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: confirmColor,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        confirmText,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              );
+            },
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

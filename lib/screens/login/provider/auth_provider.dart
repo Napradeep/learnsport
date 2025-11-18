@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportspark/screens/home_screen.dart';
 import 'package:sportspark/screens/login/model/login_request.dart';
 import 'package:sportspark/screens/login/model/register_request.dart';
 import 'package:sportspark/screens/login/model/user_model.dart';
@@ -32,8 +33,8 @@ class AuthProvider with ChangeNotifier {
         Messenger.alertSuccess("Login successful!");
         return true;
       } else {
-        final message = response?.data?['message'] ?? "Invalid credentials";
-        Messenger.alertError(message);
+        // final message = response?.data?['message'] ?? "Invalid credentials";
+        // Messenger.alertError(message);
         return false;
       }
     } catch (e) {
@@ -75,13 +76,13 @@ class AuthProvider with ChangeNotifier {
         Messenger.alertSuccess("Registration successful!");
         return true;
       } else {
-        final message = response?.data?['message'] ?? "Registration failed";
-        Messenger.alertError(message);
+        // final message = response?.data?['message'] ?? "Registration failed";
+        // Messenger.alertError(message);
         return false;
       }
     } catch (e) {
       debugPrint('❌ Register error: $e');
-      //  Messenger.alertError("Registration failed. Please try again.");
+    
       return false;
     }
   }
@@ -89,9 +90,19 @@ class AuthProvider with ChangeNotifier {
   /// LOGOUT
   Future<void> logout(BuildContext context) async {
     await UserPreferences.logout(context);
+
     _user = null;
     notifyListeners();
+
     Messenger.alertSuccess("Logged out successfully.");
+
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => HomeScreen()),
+        (route) => false,
+      );
+    }
   }
 
   /// FORGOT PASSWORD

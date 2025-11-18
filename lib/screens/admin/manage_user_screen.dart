@@ -72,7 +72,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
 
   @override
   void didPopNext() {
-    // Called when we come back from MyUserScreen
     if (_returning) return;
     _returning = true;
     Future.microtask(() {
@@ -380,38 +379,72 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                   Icons.more_vert,
                   color: AppColors.iconLightColor,
                 ),
+
+                // ---- BUILD ITEMS DYNAMICALLY ----
+                itemBuilder: (_) {
+                  final items = <PopupMenuEntry<String>>[
+                    const PopupMenuItem(value: 'Edit', child: Text('Edit')),
+                  ];
+
+                  if (user['status'] != 'ACTIVE') {
+                    items.add(
+                      const PopupMenuItem(
+                        value: 'Activate',
+                        child: Text('Activate'),
+                      ),
+                    );
+                  }
+                  if (user['status'] != 'INACTIVE') {
+                    items.add(
+                      const PopupMenuItem(
+                        value: 'Deactivate',
+                        child: Text('Deactivate'),
+                      ),
+                    );
+                  }
+                  if (user['status'] != 'BLOCKED') {
+                    items.add(
+                      const PopupMenuItem(value: 'Block', child: Text('Block')),
+                    );
+                  }
+
+                  return items;
+                },
+
+                // ---- YOUR SAME LOGIC BELOW ----
                 onSelected: (value) async {
                   if (value == 'Edit') {
                     MyRouter.push(screen: MyUserScreen(userData: user));
                     return;
                   }
 
-                  // ── Status change ─────────────────────────────
                   final sportsProvider = Provider.of<AddSportsProvider>(
                     context,
                     listen: false,
                   );
+
                   final (newStatus, title, msg, confirmColor) = switch (value) {
                     'Activate' => (
                       'ACTIVE',
-                      'Activate User',
-                      'Activate ${user['name']}?',
+                      'Activate User!',
+                      'Are you sure you want to activate ${user['name']}?',
                       Colors.green,
                     ),
                     'Deactivate' => (
                       'INACTIVE',
-                      'Deactivate User',
-                      'Deactivate ${user['name']}?',
+                      'Deactivate User!',
+                      'Are you sure you want to deactivate ${user['name']}?',
                       Colors.orange,
                     ),
                     'Block' => (
                       'BLOCKED',
-                      'Block User',
-                      'Block ${user['name']}?',
+                      'Block User!',
+                      'Are you sure you want to block ${user['name']}?',
                       Colors.red,
                     ),
                     _ => (null, '', '', Colors.orange),
                   };
+
                   if (newStatus == null) return;
 
                   CustomConfirmationDialog.show(
@@ -431,9 +464,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                           id: user['_id'],
                           status: newStatus,
                         );
+
                         if (ok) {
                           Messenger.alertSuccess(
-                            "${user['name']} is now $statusDisplay.",
+                            "${user['name']} is now $newStatus.",
                           );
                           await _refreshCurrentTabSilently();
                         } else {
@@ -445,12 +479,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     },
                   );
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'Edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'Activate', child: Text('Activate')),
-                  PopupMenuItem(value: 'Deactivate', child: Text('Deactivate')),
-                  PopupMenuItem(value: 'Block', child: Text('Block')),
-                ],
               ),
             ),
           );

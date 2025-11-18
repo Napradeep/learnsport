@@ -57,13 +57,19 @@ class _AdminScreenState extends State<AdminScreen> {
         title: 'My Profile',
         icon: Icons.people_alt_outlined,
         color: Colors.red,
-        onTap: () => MyRouter.push(screen: MyProfileScreen()),
+        onTap: () => MyRouter.push(screen: MyProfileScreen(checkrole: userRole,)),
       ),
       AdminCardData(
         title: 'Manage Bookings',
         icon: Icons.calendar_month_outlined,
         color: Colors.blueAccent,
         onTap: () => MyRouter.push(screen: const BookingHistoryScreen()),
+      ),
+      AdminCardData(
+        title: 'Contact Us',
+        icon: Icons.contact_support,
+        color: Colors.purpleAccent,
+        onTap: () => MyRouter.push(screen: ContactUsScreen(role: userRole)),
       ),
       if (userRole != "USER") ...[
         AdminCardData(
@@ -72,12 +78,7 @@ class _AdminScreenState extends State<AdminScreen> {
           color: Colors.orangeAccent,
           onTap: () => MyRouter.push(screen: const ManageUsersScreen()),
         ),
-        AdminCardData(
-          title: 'Contact Us',
-          icon: Icons.contact_support,
-          color: Colors.purpleAccent,
-          onTap: () => MyRouter.push(screen: const ContactUsScreen()),
-        ),
+
         AdminCardData(
           title: 'Manage Sports',
           icon: Icons.sports,
@@ -100,6 +101,7 @@ class _AdminScreenState extends State<AdminScreen> {
     ];
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 4,
@@ -141,7 +143,7 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Manage all your activities in one place.',
+                'Manage your all activities in one place.',
                 style: TextStyle(color: Colors.grey[700], fontSize: 15),
               ),
               const SizedBox(height: 20),

@@ -4,7 +4,6 @@ import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/snackbar/snackbar.dart';
 import 'package:sportspark/utils/widget/custom_button.dart';
-import 'package:sportspark/utils/widget/custom_confirmation_dialog.dart';
 
 class PaymentDeatils extends StatefulWidget {
   final String turfName;
@@ -15,7 +14,7 @@ class PaymentDeatils extends StatefulWidget {
   final String mobileNumber;
   final String email;
   final String address;
-  final String notes;
+  final String slotAmount;
 
   const PaymentDeatils({
     super.key,
@@ -27,7 +26,7 @@ class PaymentDeatils extends StatefulWidget {
     required this.mobileNumber,
     required this.email,
     required this.address,
-    required this.notes,
+    required this.slotAmount,
   });
 
   @override
@@ -39,10 +38,12 @@ class _PaymentDeatilsState extends State<PaymentDeatils>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
-  final double slotAmount = 600.0;
-
+  double slotAmountValue = 0.0;
   @override
   void initState() {
+    print(widget.selectedSlots);
+    print(widget.slotAmount);
+    slotAmountValue = double.tryParse(widget.slotAmount) ?? 0.0;
     super.initState();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -60,7 +61,7 @@ class _PaymentDeatilsState extends State<PaymentDeatils>
     super.dispose();
   }
 
-  double get totalAmount => widget.selectedSlots.length * slotAmount;
+  double get totalAmount => widget.selectedSlots.length * slotAmountValue;
 
   Widget _sectionCard({required String title, required List<Widget> children}) {
     return FadeTransition(
@@ -231,8 +232,6 @@ class _PaymentDeatilsState extends State<PaymentDeatils>
                       if (widget.email.isNotEmpty)
                         _buildDetailRow('Email', widget.email),
                       _buildDetailRow('Address', widget.address),
-                      if (widget.notes.isNotEmpty)
-                        _buildDetailRow('Notes', widget.notes),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -244,27 +243,7 @@ class _PaymentDeatilsState extends State<PaymentDeatils>
                       text: 'Proceed to Pay ',
                       color: AppColors.background,
                       onPressed: () {
-                        String dialogTitle = "Payment Confirmation";
-                        String dialogMessage =
-                            "Are you sure you want to complete the payment?";
-
-                        CustomConfirmationDialog.show(
-                          context: context,
-                          title: dialogTitle,
-                          message: dialogMessage,
-                          icon: Icons.payment,
-                          onConfirm: () {
-                            Messenger.alertSuccess('Payment successful');
-                            MyRouter.pushRemoveUntil(
-                              screen: const HomeScreen(),
-                            );
-                          },
-                          confirmColor: AppColors.bluePrimaryDual,
-
-                          iconColor: AppColors.iconColor,
-                          backgroundColor: AppColors.background,
-                          textColor: AppColors.textPrimary,
-                        );
+                        _showLogoutDialog(context);
                       },
                     ),
                   ),
@@ -295,6 +274,95 @@ class _PaymentDeatilsState extends State<PaymentDeatils>
           ),
         ),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Center icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blueAccent.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.payment,
+                  color: Colors.blueAccent,
+                  size: 42,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Title
+              const Text(
+                "Payment Confirmation!",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Subtitle
+              const Text(
+                "Are you sure you want to complete the payment?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Buttons Row
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text("Cancel"),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        MyRouter.pop();
+                        Messenger.alertSuccess('Payment successful');
+                        MyRouter.pushRemoveUntil(screen: const HomeScreen());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "Pay",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

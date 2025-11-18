@@ -57,7 +57,7 @@ class DrawerMenu extends StatelessWidget {
             _buildDrawerItem(
               context,
               icon: Icons.sports,
-              title: 'Games List',
+              title: 'Our Sports List',
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/sport_game');

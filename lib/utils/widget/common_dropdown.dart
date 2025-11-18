@@ -2,27 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:sportspark/utils/const/const.dart';
 
-/// Reusable dropdown with:
-/// • Loading / error / empty states
-/// • "General" always first & default
-/// • Same styling as your ContactScreen
 class CommonDropdown extends StatelessWidget {
-  /// List of items from API (e.g. sports)
   final List<Map<String, dynamic>> items;
-
-  /// Current selected value
   final String? selectedValue;
-
-  /// Called when user selects an item
   final ValueChanged<String?> onChanged;
-
-  /// Loading flag
   final bool isLoading;
-
-  /// Optional error message
   final String? error;
-
-  /// Optional label (default: "Contact Type")
   final String label;
 
   const CommonDropdown({
@@ -41,10 +26,19 @@ class CommonDropdown extends StatelessWidget {
     if (isLoading) {
       return _buildDropdown(
         items: const [
-          DropdownMenuItem(value: 'General', child: Text('General')),
+          DropdownMenuItem(
+            value: 'General',
+            child: Text(
+              'General',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
         value: selectedValue,
-        hint: const Text('Loading...'),
+        hint: const Text(
+          'Loading...',
+          overflow: TextOverflow.ellipsis,
+        ),
         enabled: false,
       );
     }
@@ -53,21 +47,42 @@ class CommonDropdown extends StatelessWidget {
     if (error != null) {
       return _buildDropdown(
         items: const [
-          DropdownMenuItem(value: 'General', child: Text('General')),
+          DropdownMenuItem(
+            value: 'General',
+            child: Text(
+              'General',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
         value: selectedValue,
-        hint: const Text('Error loading'),
+        hint: const Text(
+          'Error loading',
+          overflow: TextOverflow.ellipsis,
+        ),
         enabled: false,
         errorText: error,
       );
     }
 
-    // 3. Build final list: General + API items
+    // 3. Build list
     final List<DropdownMenuItem<String>> dropdownItems = [
-      const DropdownMenuItem(value: 'General', child: Text('General')),
+      const DropdownMenuItem(
+        value: 'General',
+        child: Text(
+          'General',
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       ...items.map((item) {
         final name = item['name']?.toString() ?? 'Unknown';
-        return DropdownMenuItem(value: name, child: Text(name));
+        return DropdownMenuItem(
+          value: name,
+          child: Text(
+            name,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
       }).toList(),
     ];
 
@@ -79,7 +94,9 @@ class CommonDropdown extends StatelessWidget {
     );
   }
 
-  // ── Same styling as your original dropdown ─────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // Dropdown builder with ellipsis applied everywhere
+  // ─────────────────────────────────────────────────────────────
   Widget _buildDropdown({
     required List<DropdownMenuItem<String>> items,
     String? value,
@@ -91,45 +108,61 @@ class CommonDropdown extends StatelessWidget {
   }) {
     return DropdownButtonFormField<String>(
       value: value,
+
+      // ⬅ Force ellipsis for the *selected* displayed text
+      selectedItemBuilder: (context) {
+        return items.map((item) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              item.value.toString(),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          );
+        }).toList();
+      },
+
       items: items,
-      hint: hint,
+      hint: hint != null
+          ? DefaultTextStyle(
+              style: const TextStyle(
+                overflow: TextOverflow.ellipsis,
+              ),
+              child: hint!,
+            )
+          : null,
       onChanged: enabled ? onChanged : null,
       validator: validator,
       autovalidateMode: AutovalidateMode.onUserInteraction,
+
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(
+          overflow: TextOverflow.ellipsis,
+        ),
         hintText: 'Select $label',
-        prefixIcon: Icon(
+        hintStyle: const TextStyle(
+          overflow: TextOverflow.ellipsis,
+        ),
+        errorText: errorText,
+        errorMaxLines: 1,
+
+        prefixIcon: const Icon(
           Icons.category_outlined,
           color: AppColors.iconLightColor,
         ),
+
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
+          borderSide: const BorderSide(width: 2),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Color.fromARGB(255, 210, 65, 51),
-            width: 1,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Color.fromARGB(255, 210, 65, 51),
-            width: 1,
-          ),
-        ),
-        errorText: errorText,
       ),
     );
   }

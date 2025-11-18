@@ -31,80 +31,61 @@ class _SportsGameState extends State<SportsGame> {
         backgroundColor: AppColors.bluePrimaryDual,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          'Sports',
+          'Our Sports List',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
             color: Colors.white,
           ),
         ),
-        centerTitle: false,
       ),
       body: Consumer<SportsProvider>(
         builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const _ShimmerGrid();
-          }
+          if (provider.isLoading) return const _ShimmerGrid();
 
           if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error: ${provider.error}'),
-                  ElevatedButton(
-                    onPressed: provider.retry,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+            return _ErrorView(
+              message: provider.error!,
+              onRetry: provider.retry,
             );
           }
 
           if (provider.sports.isEmpty) {
-            return const Center(child: Text('No sports available'));
+            return const Center(
+              child: Text(
+                'No sports available!',
+                style: TextStyle(fontSize: 18),
+              ),
+            );
           }
 
           return Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: GridView.builder(
               physics: const BouncingScrollPhysics(),
+              itemCount: provider.sports.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.1,
               ),
-              itemCount: provider.sports.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (_, index) {
                 final data = provider.sports[index];
-                final name = data['name'] ?? 'Unknown Sport';
-                final imageUrl = data['imageUrl'];
-                final fallbackImage = 'assets/skating.jpg';
-
-                return TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 400 + index * 120),
-                  curve: Curves.easeOutBack,
-                  builder: (context, value, child) {
-                    final clampedOpacity = value.clamp(0.0, 1.0);
-                    return Transform.scale(
-                      scale: value,
-                      child: Opacity(opacity: clampedOpacity, child: child),
-                    );
-                  },
+                return _AnimatedItemWrapper(
+                  index: index,
                   child: _SportCard(
-                    name: name,
-                    imageUrl: imageUrl,
-                    fallbackImage: fallbackImage,
+                    name: data['name'] ?? 'Unknown Sport',
+                    imageUrl: data['image'] ?? data['banner'],
+                    isAvailable: (data['status'] ?? '').toString().toUpperCase() == 'AVAILABLE',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => DetailsScreen(
-                            gameName: name,
-                            imagePath: imageUrl ?? fallbackImage,
-                          ),
+                        PageRouteBuilder(
+                          transitionDuration: const Duration(milliseconds: 600),
+                          pageBuilder: (_, __, ___) => DetailsScreen(sportData: data),
+                          transitionsBuilder: (_, a, __, c) =>
+                              FadeTransition(opacity: a, child: c),
                         ),
                       );
                     },
@@ -119,16 +100,46 @@ class _SportsGameState extends State<SportsGame> {
   }
 }
 
+class _AnimatedItemWrapper extends StatelessWidget {
+  final int index;
+  final Widget child;
+
+  const _AnimatedItemWrapper({
+    required this.index,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 350 + (index * 80)),
+      curve: Curves.easeOutBack,
+      builder: (_, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Opacity(
+            opacity: value.clamp(0.0, 1.0),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+
 class _SportCard extends StatefulWidget {
   final String name;
   final String? imageUrl;
-  final String fallbackImage;
+  final bool isAvailable;
   final VoidCallback onTap;
 
   const _SportCard({
     required this.name,
     required this.imageUrl,
-    required this.fallbackImage,
+    required this.isAvailable,
     required this.onTap,
   });
 
@@ -137,18 +148,18 @@ class _SportCard extends StatefulWidget {
 }
 
 class _SportCardState extends State<_SportCard> {
-  bool _isPressed = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) => setState(() => _isPressed = false),
-      onTapCancel: () => setState(() => _isPressed = false),
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
       onTap: widget.onTap,
       child: AnimatedScale(
-        scale: _isPressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 160),
+        scale: _pressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
         child: Container(
           decoration: BoxDecoration(
@@ -166,15 +177,25 @@ class _SportCardState extends State<_SportCard> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _buildImage(),
+              // Main image
+              if (widget.imageUrl != null)
+                CachedNetworkImage(
+                  imageUrl: widget.imageUrl!,
+                  fit: BoxFit.cover,
+                  memCacheWidth: 350, // Faster load
+                  placeholder: (_, __) => _shimmerBox(),
+                  errorWidget: (_, __, ___) => _fallbackIcon(),
+                )
+              else
+                _fallbackIcon(),
 
-              // Overlay gradient
+              // Gradient
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.4),
-                      Colors.black.withOpacity(0.2),
+                      Colors.black.withOpacity(0.45),
+                      Colors.black.withOpacity(0.15),
                       Colors.transparent,
                     ],
                     begin: Alignment.bottomCenter,
@@ -184,26 +205,25 @@ class _SportCardState extends State<_SportCard> {
               ),
 
               // Title
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    widget.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black45,
-                          offset: Offset(1, 1),
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Text(
+                  widget.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black54,
+                        offset: Offset(1, 1),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -214,36 +234,20 @@ class _SportCardState extends State<_SportCard> {
     );
   }
 
-  Widget _buildImage() {
-    // If no valid image, show fallback asset directly
-    if (widget.imageUrl == null || widget.imageUrl!.isEmpty) {
-      return _buildErrorIcon();
-    }
-
-    // Cached network image with shimmer placeholder
-    return CachedNetworkImage(
-      imageUrl: widget.imageUrl!,
-      fit: BoxFit.cover,
-      placeholder: (context, url) => Shimmer.fromColors(
+  Widget _shimmerBox() => Shimmer.fromColors(
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade100,
         child: Container(color: Colors.white),
-      ),
-      errorWidget: (context, url, error) => _buildErrorIcon(),
-    );
-  }
+      );
 
-  Widget _buildErrorIcon() {
-    return Container(
-      color: Colors.grey.shade200,
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.image_not_supported_rounded,
-        color: Colors.grey.shade500,
-        size: 48,
-      ),
-    );
-  }
+  Widget _fallbackIcon() => Container(
+        color: Colors.grey.shade200,
+        child: const Icon(
+          Icons.sports_soccer,
+          size: 60,
+          color: Colors.grey,
+        ),
+      );
 }
 
 class _ShimmerGrid extends StatelessWidget {
@@ -252,9 +256,9 @@ class _ShimmerGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: GridView.builder(
-        itemCount: 6,
+        itemCount: 8,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 16,
@@ -271,6 +275,36 @@ class _ShimmerGrid extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorView({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text('Error: $message', textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.bluePrimaryDual,
+            ),
+          ),
+        ],
       ),
     );
   }

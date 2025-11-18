@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         centerTitle: false,
-        title: Text("Login Screen"),
+        title: Text("Login"),
         backgroundColor: AppColors.bluePrimaryDual,
         foregroundColor: Colors.white,
       ),

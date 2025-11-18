@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,11 @@ class AddSportsProvider with ChangeNotifier {
 
   List<Map<String, dynamic>> get sports => _sports;
   bool get isLoading => _isLoading;
+
+  void setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
 
   // Fetch sports with optional refresh control
   Future<void> fetchSports({bool forceRefresh = false}) async {
@@ -30,6 +36,7 @@ class AddSportsProvider with ChangeNotifier {
         final json = res?.data as Map<String, dynamic>;
         if (json['message'] == 'Sports grounds fetched successfully') {
           _sports = List<Map<String, dynamic>>.from(json['sports']);
+          log(sports.toString());
         } else {
           _sports = [];
         }
@@ -58,6 +65,7 @@ class AddSportsProvider with ChangeNotifier {
     required String status,
     File? image,
     File? banner,
+    File? webBanner,
   }) async {
     try {
       final form = FormData.fromMap({
@@ -79,6 +87,11 @@ class AddSportsProvider with ChangeNotifier {
             banner.path,
             filename: 'sport_banner.jpg',
           ),
+        if (webBanner != null)
+          'web_banner': await MultipartFile.fromFile(
+            webBanner.path,
+            filename: 'sport_banner.jpg',
+          ),
       });
 
       final res = await _networkUtils.request(
@@ -96,7 +109,6 @@ class AddSportsProvider with ChangeNotifier {
           _sports.insert(0, newSport);
           notifyListeners();
         } else {
-          // Fallback: refresh full list
           await fetchSports(forceRefresh: true);
         }
 
@@ -171,6 +183,7 @@ class AddSportsProvider with ChangeNotifier {
     required String status,
     File? image,
     File? banner,
+    File? webBanner,
   }) async {
     try {
       final form = FormData.fromMap({
@@ -190,6 +203,11 @@ class AddSportsProvider with ChangeNotifier {
         if (banner != null)
           'banner': await MultipartFile.fromFile(
             banner.path,
+            filename: 'sport_banner.jpg',
+          ),
+        if (webBanner != null)
+          'web_banner': await MultipartFile.fromFile(
+            webBanner.path,
             filename: 'sport_banner.jpg',
           ),
       });
@@ -217,7 +235,7 @@ class AddSportsProvider with ChangeNotifier {
         Messenger.alert(msg: 'Sport updated successfully');
         return true;
       } else {
-        Messenger.alertError(res?.data['message'] ?? 'Failed to update sport');
+        // Messenger.alertError(res?.data['message'] ?? 'Failed to update sport');
         return false;
       }
     } catch (e) {

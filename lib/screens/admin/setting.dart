@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sportspark/screens/home_screen.dart';
 import 'package:sportspark/screens/login/provider/auth_provider.dart';
 import 'package:sportspark/screens/login/view/change_password.dart';
 import 'package:sportspark/utils/const/const.dart';
@@ -72,15 +71,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       leading: const Icon(Icons.logout, color: Colors.red),
                       title: const Text('Logout'),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () async {
-                        final userProvider = Provider.of<AuthProvider>(
-                          context,
-                          listen: false,
-                        );
-                        await userProvider.logout(context);
-
-                        // Navigate to login screen after logout
-                        MyRouter.pushRemoveUntil(screen: HomeScreen());
+                      onTap: () {
+                        _showLogoutDialog(context);
                       },
                     ),
                   ],
@@ -113,4 +105,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+}
+
+void _showLogoutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Center icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.logout, color: Colors.red, size: 42),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Title
+            const Text(
+              "Logout",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Subtitle
+            const Text(
+              "Are you sure you want to logout from your account?",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Buttons Row
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+
+                      final auth = Provider.of<AuthProvider>(
+                        context,
+                        listen: false,
+                      );
+
+                      await auth.logout(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      "Logout",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

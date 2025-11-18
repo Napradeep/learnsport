@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:sportspark/screens/admin/profile_service/profile_provider.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/snackbar/snackbar.dart';
+import 'package:sportspark/utils/widget/custom_confirmation_dialog.dart';
 import 'package:sportspark/utils/widget/custom_text_field.dart';
 
 class MyUserScreen extends StatefulWidget {
@@ -49,35 +50,77 @@ class _MyUserScreenState extends State<MyUserScreen> {
     _addressController.text = userData['address'] ?? '';
   }
 
-  Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSaving = true);
+Future<void> _saveProfile() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    final provider = Provider.of<ProfileProvider>(context, listen: false);
-    final updatedData = {
-      // 'id': _userId,
-      'name': _nameController.text.trim(),
-      'father_name': _fatherNameController.text.trim(),
-      'mobile': _mobileController.text.trim(),
-      'email': _emailController.text.trim(),
-      'native_place': _nativePlaceController.text.trim(),
-      'aadhar_number': _aadharController.text.trim(),
-      'address': _addressController.text.trim(),
-    };
+  CustomConfirmationDialog.show(
+    context: context,
+    title: "Update Profile!",
+    message: "Are you sure you want to update your profile details?",
+    icon: Icons.info_outline,
+    iconColor: Colors.blue,
+    confirmColor: Colors.blue,
+    onConfirm: () async {
+      
 
-    final success = await provider.updateProfile(updatedData, _userId ?? "");
+      setState(() => _isSaving = true);
 
-    if (!mounted) return;
-    setState(() => _isSaving = false);
+      final provider = Provider.of<ProfileProvider>(context, listen: false);
+      final updatedData = {
+        'name': _nameController.text.trim(),
+        'father_name': _fatherNameController.text.trim(),
+        'mobile': _mobileController.text.trim(),
+        'email': _emailController.text.trim(),
+        'native_place': _nativePlaceController.text.trim(),
+        'aadhar_number': _aadharController.text.trim(),
+        'address': _addressController.text.trim(),
+      };
 
-    if (success) {
-      Messenger.alertSuccess("Profile updated successfully!");
-      Navigator.pop(context, true);
-    } else {
-      Messenger.alertError("Failed to update profile!");
-    }
-  }
+      final success = await provider.updateProfile(updatedData, _userId ?? "");
+
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+
+      if (success) {
+        Messenger.alertSuccess("Profile updated successfully!");
+        Navigator.pop(context, true);  // return to previous page
+      } else {
+        Messenger.alertError("Failed to update profile!");
+      }
+    },
+  );
+}
+
+  // Future<void> _saveProfile() async {
+  //   if (!_formKey.currentState!.validate()) return;
+
+  //   setState(() => _isSaving = true);
+
+  //   final provider = Provider.of<ProfileProvider>(context, listen: false);
+  //   final updatedData = {
+  //     // 'id': _userId,
+  //     'name': _nameController.text.trim(),
+  //     'father_name': _fatherNameController.text.trim(),
+  //     'mobile': _mobileController.text.trim(),
+  //     'email': _emailController.text.trim(),
+  //     'native_place': _nativePlaceController.text.trim(),
+  //     'aadhar_number': _aadharController.text.trim(),
+  //     'address': _addressController.text.trim(),
+  //   };
+
+  //   final success = await provider.updateProfile(updatedData, _userId ?? "");
+
+  //   if (!mounted) return;
+  //   setState(() => _isSaving = false);
+
+  //   if (success) {
+  //     Messenger.alertSuccess("Profile updated successfully!");
+  //     Navigator.pop(context, true);
+  //   } else {
+  //     Messenger.alertError("Failed to update profile!");
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

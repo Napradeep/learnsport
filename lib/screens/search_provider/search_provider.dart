@@ -36,6 +36,14 @@ class UserProvider with ChangeNotifier {
 
   String _adminSearchQuery = "";
 
+  bool _isUpdatingStatus = false;
+  bool get isUpdatingStatus => _isUpdatingStatus;
+
+  void setUpdatingStatus(bool value) {
+    _isUpdatingStatus = value;
+    notifyListeners();
+  }
+
   /// 🚀 Fetch Users
   Future<void> fetchUsers({
     int page = 1,

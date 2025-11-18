@@ -1,12 +1,20 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:sportspark/screens/admin_screen.dart';
 import 'package:sportspark/screens/details_screen.dart';
 import 'package:sportspark/screens/login/view/login_screen.dart';
+import 'package:sportspark/screens/slot_booking_screen.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/shared/shared_pref.dart';
 import 'package:sportspark/utils/widget/drawer_menu.dart';
+import 'package:sportspark/screens/sportslist/sports_provider.dart';
+
+import 'package:shimmer/shimmer.dart';
+import 'package:sportspark/utils/widget/sports_cache_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,87 +24,386 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _staggerController;
-  late Animation<double> _fadeAnimation;
+  late final AnimationController _listAnimationController;
+  late final AnimationController _fadeController;
+  late final ScrollController _scrollController;
 
-  final List<Map<String, String>> _banners = [
-    {'image': 'assets/basketball.jpg', 'name': 'Basketball'},
-    {'image': 'assets/crickettruf.jpg', 'name': 'Cricket Turf'},
-    {'image': 'assets/kabadi.jpg', 'name': 'Kabaddi'},
-    {'image': 'assets/karate.jpg', 'name': 'Karate'},
-    {'image': 'assets/skating.jpg', 'name': 'Skating'},
-    {'image': 'assets/volleyball.jpg', 'name': 'Volleyball'},
-  ];
+  String? _role;
 
-  final List<Map<String, dynamic>> _turfs = [
-    {
-      'name': 'Ocean Turf',
-      'icon': Icons.waves,
-      'color': Colors.blue,
-      'image': 'assets/volleyball.jpg',
-    },
-    {
-      'name': 'Green Milk Turf',
-      'icon': Icons.grass,
-      'color': Colors.green,
-      'image': 'assets/volleyball.jpg',
-    },
-    {
-      'name': 'Football Turf',
-      'icon': Icons.sports_soccer,
-      'color': Colors.red,
-      'image': 'assets/volleyball.jpg',
-    },
-    {
-      'name': 'Net Practice Turf',
-      'icon': Icons.sports_cricket,
-      'color': Colors.orange,
-      'image': 'assets/crickettruf.jpg',
-    },
-  ];
-
-  String? role;
-
-  Future<void> _loadUserData() async {
-    final fetchedRole = await UserPreferences.getRole();
-
-    if (mounted) {
-      setState(() {
-        role = fetchedRole ?? "Unknown";
-      });
-    }
-  }
+  // Global aggressive cache manager (7-day cache)
+  final CacheManager cache = SportsCacheManager.instance;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+
     _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 550),
+    )..forward();
+
+    _listAnimationController = AnimationController(
+      vsync: this,
       duration: const Duration(milliseconds: 900),
-      vsync: this,
-    )..forward();
-
-    _staggerController = AnimationController(
-      duration: const Duration(milliseconds: 700),
-      vsync: this,
-    )..forward();
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
     );
+
+    _scrollController = ScrollController();
+
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) _listAnimationController.forward();
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SportsProvider>().loadSports();
+      _loadUserData();
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    final fetchedRole = await UserPreferences.getRole();
+    if (!mounted) return;
+    setState(() => _role = fetchedRole ?? "Unknown");
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
-    _staggerController.dispose();
+    _listAnimationController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
+  // ------------------- SHIMMERS -------------------
+
+  Widget _bannerShimmer() {
+    return SizedBox(
+      height: 220,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _turfCardShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        height: 135,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+
+  // ------------------- CAROUSEL -------------------
+
+  Widget _buildCarousel(List<Map<String, dynamic>> sports) {
+    if (sports.isEmpty) return _bannerShimmer();
+
+    return CarouselSlider.builder(
+      itemCount: sports.length,
+      itemBuilder: (context, index, realIdx) {
+        final sport = sports[index];
+        final bannerUrl =
+            (sport['banner'] ?? sport['web_banner'] ?? "") as String;
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DetailsScreen(sportData: sport),
+              ),
+            );
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CachedNetworkImage(
+                cacheManager: cache,
+                imageUrl: bannerUrl,
+                fit: BoxFit.cover,
+                memCacheHeight: 600,
+                placeholder: (_, __) => Container(color: Colors.grey[300]),
+                errorWidget: (_, __, ___) => Container(
+                  color: Colors.grey[300],
+                  child: const Icon(
+                    Icons.sports,
+                    size: 100,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.55),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                bottom: 12,
+                child: Text(
+                  sport['name'] ?? "Sport",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      options: CarouselOptions(
+        height: double.infinity,
+        viewportFraction: 1,
+        autoPlay: true,
+        autoPlayInterval: const Duration(seconds: 4),
+        enableInfiniteScroll: true,
+      ),
+    );
+  }
+
+  // ------------------- TURF CARD -------------------
+
+  Widget _buildTurfItem(
+    BuildContext context,
+    Map<String, dynamic> turf,
+    int index,
+  ) {
+    final String imageUrl = (turf['image'] ?? "") as String;
+    final String turfName = (turf['name'] ?? "Turf").toString();
+    final String actualPrice = (turf['actual_price_per_slot'] ?? "0")
+        .toString();
+    final String finalPrice = (turf['final_price_per_slot'] ?? "0").toString();
+    final bool isUnavailable =
+        (turf['status'] ?? "").toString().toUpperCase() == "NOT_AVAILABLE";
+
+    final double start = (index * 0.06).clamp(0.0, 0.7);
+    final double end = (start + 0.45).clamp(0.0, 1.0);
+
+    final animation = CurvedAnimation(
+      parent: _listAnimationController,
+      curve: Interval(start, end, curve: Curves.easeOut),
+    );
+
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.08),
+          end: Offset.zero,
+        ).animate(animation),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                ),
+                child: Stack(
+                  children: [
+                    CachedNetworkImage(
+                      cacheManager: cache,
+                      imageUrl: imageUrl,
+                      memCacheHeight: 350,
+                      height: 135,
+                      width: 130,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        height: 135,
+                        width: 130,
+                        color: Colors.grey[300],
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        height: 135,
+                        width: 130,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.sports_soccer, size: 42),
+                      ),
+                    ),
+                    Container(
+                      height: 135,
+                      width: 130,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.transparent, Colors.black26],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // --------------- DETAILS ---------------
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        turfName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Text(
+                            "₹$actualPrice",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.redAccent,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            "₹$finalPrice",
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Book your slot now!",
+                        style: TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // --------------- BOOK BTN ---------------
+              Padding(
+                padding: EdgeInsets.only(
+                  right: 10,
+                  top: MediaQuery.of(context).size.height * 0.08,
+                ),
+                child: ElevatedButton(
+                  onPressed: isUnavailable
+                      ? _showUnavailableDialog
+                      : () {
+                          MyRouter.push(
+                            screen: SlotBookingScreen(
+                              turfName: turfName,
+                              sportsId: turf['_id'],
+                              slotAmount: finalPrice,
+                            ),
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isUnavailable
+                        ? Colors.grey
+                        : AppColors.bluePrimaryDual,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    children: const [
+                      Text(
+                        "Book",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: 5),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ------------------- ALERT -------------------
+
+  void _showUnavailableDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Note!"),
+        content: const Text(
+          "This sport is currently under maintenance. Please try again later!.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------- BUILD -------------------
+
   @override
   Widget build(BuildContext context) {
+    final isLoading = context.select<SportsProvider, bool>((p) => p.isLoading);
+    final sportsList = context
+        .select<SportsProvider, List<Map<String, dynamic>>>(
+          (p) => List<Map<String, dynamic>>.from(p.sports),
+        );
+
     return Theme(
       data: Theme.of(context).copyWith(
         colorScheme: ColorScheme.fromSeed(
@@ -108,7 +415,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           backgroundColor: AppColors.bluePrimaryDual,
           foregroundColor: Colors.white,
           elevation: 0,
-          centerTitle: true,
         ),
       ),
       child: Scaffold(
@@ -116,167 +422,79 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         appBar: AppBar(
           elevation: 4,
           shadowColor: Colors.black26,
-          centerTitle: false,
-          titleSpacing: 0,
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu, color: Colors.white),
               onPressed: () => Scaffold.of(context).openDrawer(),
-              tooltip: 'Menu',
             ),
           ),
           title: const Text(
-            'LearnFort Sports Park',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: Colors.white,
-              letterSpacing: 0.5,
-            ),
+            "LearnFort Sports Park",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
           ),
           actions: [
-            // Login text button
             GestureDetector(
               onTap: () {
-                if (role == "USER" ||
-                    role == "ADMIN" ||
-                    role == "SUPER_ADMIN") {
-                  //MyProfileScreen
-                  MyRouter.push(screen: AdminScreen(heading: role));
+                if (_role == "USER" ||
+                    _role == "ADMIN" ||
+                    _role == "SUPER_ADMIN") {
+                  MyRouter.push(screen: AdminScreen(heading: _role));
                 } else {
                   MyRouter.push(screen: const LoginScreen());
                 }
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 7.0),
-                child: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: AppColors.bluePrimaryDual,
-                    size: 20,
-                  ),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.all(5),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person,
+                  size: 20,
+                  color: AppColors.bluePrimaryDual,
                 ),
               ),
             ),
           ],
         ),
 
-        drawer: DrawerMenu(isAdmin: role ?? ""),
+        drawer: DrawerMenu(isAdmin: _role ?? ""),
+
         body: CustomScrollView(
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
               child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Padding(
+                opacity: _fadeController,
+                child: Container(
+                  color: Colors.white,
                   padding: const EdgeInsets.all(3),
-                  child: CarouselSlider(
-                    options: CarouselOptions(
-                      height: 210,
-                      autoPlay: true,
-                      autoPlayInterval: const Duration(seconds: 3),
-                      enlargeCenterPage: false,
-                      viewportFraction: 1.0,
-                      enableInfiniteScroll: true,
-                      scrollPhysics: const BouncingScrollPhysics(),
-                    ),
-                    items: _banners.map((banner) {
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DetailsScreen(
-                                gameName: banner['name']!,
-                                imagePath: banner['image']!,
-                              ),
-                            ),
-                          );
-                        },
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.zero,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.asset(
-                                banner['image']!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  color: AppColors.iconLightColor.withOpacity(
-                                    0.2,
-                                  ),
-                                  child: const Icon(Icons.sports, size: 100),
-                                ),
-                              ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.black.withOpacity(0.6),
-                                    ],
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: 16,
-                                bottom: 12,
-                                child: Text(
-                                  banner['name']!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black54,
-                                        offset: Offset(1, 1),
-                                        blurRadius: 4,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                  height: 220,
+                  child: _buildCarousel(sportsList),
                 ),
               ),
             ),
 
-            /// 🔹 Section Header
+            // Title
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
               sliver: SliverToBoxAdapter(
                 child: Row(
-                  children: [
-                    const Icon(
+                  children: const [
+                    Icon(
                       Icons.sports_soccer,
                       color: AppColors.bluePrimaryDual,
                       size: 26,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
-                      'Available Turfs',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      "Available Turfs",
+                      style: TextStyle(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -284,143 +502,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
 
-            /// 🔹 Turf Cards
+            // List
             SliverPadding(
-              padding: const EdgeInsets.all(16.0),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final turf = _turfs[index];
-                  return AnimatedBuilder(
-                    animation: _staggerController,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(
-                          0,
-                          50 * (1 - _staggerController.value.clamp(0, 1)),
-                        ),
-                        child: Opacity(
-                          opacity: _staggerController.value.clamp(0, 1),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () => Navigator.pushNamed(
-                          context,
-                          '/slot_booking',
-                          arguments: turf['name'],
-                        ),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                              ),
-                              child: Image.asset(
-                                turf['image'] ?? 'assets/placeholder.jpg',
-                                height: 120,
-                                width: 120,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  height: 120,
-                                  width: 120,
-                                  color: AppColors.bluePrimaryDual,
-                                  child: Icon(
-                                    turf['icon'] as IconData,
-                                    color: Colors.white,
-                                    size: 40,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      turf['name'] as String,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    const Text(
-                                      'Book your slot today!',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 12.0),
-                              child: ElevatedButton(
-                                onPressed: () => Navigator.pushNamed(
-                                  context,
-                                  '/slot_booking',
-                                  arguments: turf['name'],
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.bluePrimaryDual,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 18,
-                                    vertical: 10,
-                                  ),
-                                  elevation: 3,
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Text(
-                                      'Book',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: isLoading
+                  ? SliverList.builder(
+                      itemBuilder: (_, __) => _turfCardShimmer(),
+                      itemCount: 4,
+                    )
+                  : SliverList.builder(
+                      itemBuilder: (_, i) =>
+                          _buildTurfItem(context, sportsList[i], i),
+                      itemCount: sportsList.length,
                     ),
-                  );
-                }, childCount: _turfs.length),
-              ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 30)),
           ],
         ),
       ),

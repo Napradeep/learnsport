@@ -100,15 +100,15 @@ class UserCard extends StatelessWidget {
 
         if (value == 'Activate') {
           newStatus = 'ACTIVE';
-          title = 'Activate User';
+          title = 'Activate User!';
           message = 'Do you want to activate ${user['name']}?';
         } else if (value == 'Deactivate') {
           newStatus = 'INACTIVE';
-          title = 'Deactivate User';
+          title = 'Deactivate User!';
           message = 'Do you want to deactivate ${user['name']}?';
         } else if (value == 'Block') {
           newStatus = 'BLOCKED';
-          title = 'Block User';
+          title = 'Block User!';
           message = 'Are you sure you want to block ${user['name']}?';
         }
 
