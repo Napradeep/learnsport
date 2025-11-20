@@ -150,6 +150,7 @@ class _MyProfileScreenState extends State<MyProfileScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        
         elevation: 0,
         backgroundColor: AppColors.bluePrimaryDual,
         foregroundColor: Colors.white,

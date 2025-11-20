@@ -89,19 +89,13 @@ class MyApp extends StatelessWidget {
 // 8)edit and delete option - must want a alert before doing action. (My profile la antha maathiri varalai) - Frontend
 // ***9)sports update - update panrappa athe page la irunthu success aanathukapram thaan back vanthu listing page kaatanum....
 // But thappa nadakuthu inga.... submit kuduthathum back vanthu romba neram kalichu updated successfully nu varuthu....
-
 // 10)loading vachu irukaiya illaya ella Api'scalling place la um?
 // Api's call panrappa ? Engaium loader action paatha maathiriye theriyala enakku....
-
 // ***11) no need unwanted sub titles in forms. (For ex : add sports)
-
 // 12)Add gallery la multiple image post panna try pannen.. but work aagala...
 // Submit aagama error adichuduchu...
-
 // ***13) reply - "your reply" kidaiyathu, "Admin's reply" - Frontend
-
 // ***14) contact us - after reply need to hide reply button... - 
-
 // 15) need status updates for contacts lists - unread status, read status 
 
 
@@ -109,27 +103,27 @@ class MyApp extends StatelessWidget {
 
 
 //1.email also  unique like as mobile number  - registration 
-//2.card deatils title - text filed lenth we need to increase and full 
+//2***.card deatils title - text filed lenth we need to increase and full 
 //3.Edit Sport -  edit not working for image
 //4***,contct us page - user tapselected na dthat tap i need to refresh,
 //5***.contct us page -  while comming to pend / complete user tap selected  tap loading,
 //6***,contct us page  - compledted api need to check and working wrongly
 //7***.manager Users - > edit , activate , deactivate and block
 //8***.Manage Sports -> edit , activate , deactivate and block
-//9.Delete User in Manage Users
+//9***.Delete User in Manage Users
 //10***.wher edit is ther we need to ask alert are you sure edit
 //11***.in header i need to display exaclamtery symbol
 //12.in Home screen -  need refresh
 //13***.Sports Deatisl Screen - if nitght : half ground- 100, full ground - 200
-//14***.Sportd Deatils screen - we need to create a 2 seprate box to display about deatils for 1 container and other deatils 1 container 
+//14***.Sportd Deatils screen - we need to create a 2 seprate box to display about deatils for 1 container and other deatils 1 container
 //15.***manage gallry - youtube vidoe ned to change
 //16,***Gallery Delete - after deleteding need to show proper redirection
 //17.***Galley Screen - we need to show menu icons - view, delete , (remove see all)
-//18.***contust us - > user list is not showing via user login
+//18.***contust us - > user list is not showing via user login 
 //19**.in deatil screen if some time price na we need to display single (price  : 1000)
 //20**,in deatil screen if some time price same ligiting price same na  - > Fulground (we need to display on same line and sinle line )
 //21***. My Enquuries - > user we need alignment need left side 
 //22***.Contact US - > while reply button i need to loading like i need 
-//23, for all screen we need to imaplement a loadinfg and submit and all  api and scenoior
-//24,book slot - > while booking time i need to get 2 more deatils (no of players , notes)
-//25, choose you slot type - > default day dropwown day and month load , (type + date - > single day)
+//23***, for all screen we need to imaplement a loadinfg and submit and all  api and scenoior
+//24***,book slot - > while booking time i need to get 2 more deatils (no of players , notes)
+//25 ///Choose you slot type - > default day dropwown day and month load , (type + date - > single day)if user choose 

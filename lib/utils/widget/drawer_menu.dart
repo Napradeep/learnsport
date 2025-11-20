@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sportspark/screens/sports_list.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/router.dart';
+import 'package:sportspark/utils/widget/privacy_policy.dart';
 
 class DrawerMenu extends StatelessWidget {
   final String isAdmin;
@@ -90,6 +91,17 @@ class DrawerMenu extends StatelessWidget {
                 Navigator.pushNamed(context, '/contact');
               },
             ),
+
+            _buildDrawerItem(
+              context,
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy Policy ',
+              onTap: () {
+                Navigator.pop(context);
+                MyRouter.push(screen: PrivacyPolicyScreen());
+              },
+            ),
+            //PrivacyPolicyScreen
             _buildDrawerItem(
               context,
               icon: Icons.info_outline,

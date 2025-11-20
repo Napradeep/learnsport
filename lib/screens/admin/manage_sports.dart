@@ -105,6 +105,7 @@ class _ManageSportsScreenState extends State<ManageSportsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+         centerTitle: false,
         title: const Text(
           'Manage Sports',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22, color: Colors.white),

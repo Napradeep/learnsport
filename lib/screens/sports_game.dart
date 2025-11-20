@@ -27,6 +27,7 @@ class _SportsGameState extends State<SportsGame> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+         centerTitle: false,
         elevation: 0,
         backgroundColor: AppColors.bluePrimaryDual,
         iconTheme: const IconThemeData(color: Colors.white),

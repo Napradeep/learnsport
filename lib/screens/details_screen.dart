@@ -88,6 +88,7 @@ class _DetailsScreenState extends State<DetailsScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+         centerTitle: false,
         elevation: 3,
         backgroundColor: AppColors.bluePrimaryDual,
         iconTheme: const IconThemeData(color: Colors.white),

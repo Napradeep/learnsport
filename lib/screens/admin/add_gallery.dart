@@ -191,6 +191,7 @@ class _GalleryFormScreenState extends State<GalleryFormScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+         centerTitle: false,
         backgroundColor: AppColors.bluePrimaryDual,
         iconTheme: IconThemeData(color: AppColors.background),
         title: Text(

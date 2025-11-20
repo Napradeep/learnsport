@@ -114,8 +114,11 @@ class ContactProvider with ChangeNotifier {
       final response = await _network.request(
         endpoint: "/contact/admin-enquiries",
         method: HttpMethod.get,
-        params: {"reply_status": isPending ? "PENDING" : "REPLIED", "page": page},
+        //read_status=UNREAD   UNREAD or READ
+        params: {"reply_status" : isPending ? "UNREAD" : "READ" , "page" : page}
+        //{"reply_status": isPending ? "PENDING" : "REPLIED", "page": page},
       );
+      //admin_read_status
 
       final List list = response?.data["enquiries"] ?? [];
       log(list.toString());

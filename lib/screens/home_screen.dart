@@ -12,7 +12,6 @@ import 'package:sportspark/utils/router/router.dart';
 import 'package:sportspark/utils/shared/shared_pref.dart';
 import 'package:sportspark/utils/widget/drawer_menu.dart';
 import 'package:sportspark/screens/sportslist/sports_provider.dart';
-
 import 'package:shimmer/shimmer.dart';
 import 'package:sportspark/utils/widget/sports_cache_manager.dart';
 
@@ -30,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   String? _role;
 
-  // Global aggressive cache manager (7-day cache)
   final CacheManager cache = SportsCacheManager.instance;
 
   @override
@@ -224,6 +222,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           child: Row(
             children: [
+              // --------------- IMAGE ---------------
               ClipRRect(
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(18),
@@ -265,103 +264,116 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              // --------------- DETAILS ---------------
+              // --------------- DETAILS + BUTTON (STACK) ---------------
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                child: SizedBox(
+                  height: 135,
+                  child: Stack(
                     children: [
-                      Text(
-                        turfName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          height: 1.1,
+                      // -------------- DETAILS LEFT --------------
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Text(
-                            "₹$actualPrice",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.redAccent,
-                              decoration: TextDecoration.lineThrough,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Turf Name with more width
+                            Text(
+                              turfName,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                height: 1.2,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            "₹$finalPrice",
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Book your slot now!",
-                        style: TextStyle(fontSize: 13, color: Colors.black54),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                            const SizedBox(height: 6),
 
-              // --------------- BOOK BTN ---------------
-              Padding(
-                padding: EdgeInsets.only(
-                  right: 10,
-                  top: MediaQuery.of(context).size.height * 0.08,
-                ),
-                child: ElevatedButton(
-                  onPressed: isUnavailable
-                      ? _showUnavailableDialog
-                      : () {
-                          MyRouter.push(
-                            screen: SlotBookingScreen(
-                              turfName: turfName,
-                              sportsId: turf['_id'],
-                              slotAmount: finalPrice,
+                            Row(
+                              children: [
+                                Text(
+                                  "₹$actualPrice",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.redAccent,
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "₹$finalPrice",
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isUnavailable
-                        ? Colors.grey
-                        : AppColors.bluePrimaryDual,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    children: const [
-                      Text(
-                        "Book",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+
+                            const SizedBox(height: 8),
+                            const Text(
+                              "Book your slot now!",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(width: 5),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: Colors.white,
+
+                      // -------------- FIXED BOOK BUTTON --------------
+                      Positioned(
+                        right: 10,
+                        bottom: 10,
+                        child: SizedBox(
+                          width: 90,
+                          child: ElevatedButton(
+                            onPressed: isUnavailable
+                                ? _showUnavailableDialog
+                                : () {
+                                    MyRouter.push(
+                                      screen: SlotBookingScreen(
+                                        turfName: turfName,
+                                        sportsId: turf['_id'],
+                                        slotAmount: finalPrice,
+                                      ),
+                                    );
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isUnavailable
+                                  ? Colors.grey
+                                  : AppColors.bluePrimaryDual,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text(
+                                  "Book",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -420,6 +432,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
+           centerTitle: false,
           elevation: 4,
           shadowColor: Colors.black26,
           leading: Builder(

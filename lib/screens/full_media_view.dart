@@ -66,6 +66,7 @@ class _FullMediaViewState extends State<FullMediaView> {
       backgroundColor: Colors.black,
 
       appBar: AppBar(
+         centerTitle: false,
         foregroundColor: Colors.white,
         backgroundColor: Colors.transparent,
         elevation: 0,

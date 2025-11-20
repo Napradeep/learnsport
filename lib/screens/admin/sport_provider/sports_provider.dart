@@ -171,6 +171,55 @@ class AddSportsProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> deleteUser({required String id}) async {
+    try {
+      final res = await _networkUtils.request(
+        endpoint: '/user/delete/$id',
+        method: HttpMethod.delete,
+      );
+
+      if (res?.statusCode == 200) {
+        final data = res?.data;
+
+        //
+        if (data == null || data.toString().trim().isEmpty) {
+          Messenger.alertSuccess('User deleted successfully');
+          notifyListeners();
+          return true;
+        }
+
+        if (data is String) {
+          if (data.toLowerCase().contains('success')) {
+            Messenger.alertSuccess('User deleted successfully');
+            notifyListeners();
+            return true;
+          }
+        }
+
+        if (data is Map<String, dynamic>) {
+          final message = (data['message'] ?? '').toString().toLowerCase();
+          if (message.contains('success')) {
+            Messenger.alertSuccess('User deleted successfully');
+            notifyListeners();
+            return true;
+          }
+        }
+
+        Messenger.alertSuccess('User deleted successfully');
+        notifyListeners();
+        return true;
+      }
+
+      Messenger.alertError(res?.data?['message'] ?? 'Failed to delete user');
+      return false;
+    } catch (e) {
+      Messenger.alertError('Delete failed: $e');
+      return false;
+    }
+  }
+
+  //https://learn-fornt-app.vercel.app/v1/user/delete/690780eb0862a58e7a670405
+
   Future<bool> updateSport({
     required String id,
     required String name,

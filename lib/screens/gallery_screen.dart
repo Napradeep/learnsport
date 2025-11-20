@@ -104,6 +104,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+         centerTitle: false,
         foregroundColor: Colors.white,
         title: const Text(
           'Gallery',

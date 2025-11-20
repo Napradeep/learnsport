@@ -91,6 +91,7 @@ class _ContactScreenState extends State<ContactScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
+        centerTitle: false,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         backgroundColor: AppColors.bluePrimaryDual,
@@ -188,19 +189,22 @@ class _ContactScreenState extends State<ContactScreen> {
                               // Email
                               MyTextFormFieldBox(
                                 controller: _emailController,
-                                labelText: 'Email (Optional)',
+                                labelText: 'Email',
                                 hinttext: 'Enter email address',
                                 keyboardType: TextInputType.emailAddress,
+
                                 icon: const Icon(
                                   Icons.email,
                                   color: AppColors.iconLightColor,
                                 ),
-                                validator: (v) {
-                                  if (v != null && v.isNotEmpty) {
-                                    return InputValidator.validateEmail(v);
-                                  }
-                                  return null;
-                                },
+                                validator: (v) =>
+                                    InputValidator.validateEmail(v ?? ''),
+                                // validator: (v) {
+                                //   if (v != null && v.isNotEmpty) {
+                                //     return InputValidator.validateEmail(v);
+                                //   }
+                                //   return null;
+                                // },
                               ),
                               const SizedBox(height: 16),
 

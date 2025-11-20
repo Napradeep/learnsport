@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sportspark/screens/admin/sport_provider/sports_provider.dart';
+import 'package:sportspark/screens/login/model/user_model.dart';
 import 'package:sportspark/screens/login/view/user_editscreen.dart';
 import 'package:sportspark/screens/search_provider/search_provider.dart';
 import 'package:sportspark/utils/const/const.dart';
 import 'package:sportspark/utils/router/route_observer.dart';
 import 'package:sportspark/utils/router/router.dart';
+import 'package:sportspark/utils/shared/shared_pref.dart';
 import 'package:sportspark/utils/snackbar/snackbar.dart';
 import 'package:sportspark/utils/widget/custom_confirmation_dialog.dart';
 
@@ -27,9 +29,17 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
 
   bool _returning = false;
 
+  UserModel? currentUser;
+  Future<void> _loadCurrentUser() async {
+    currentUser = await UserPreferences.getUser();
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
+
+    _loadCurrentUser();
 
     // Animations
     _animCtrl = AnimationController(
@@ -251,6 +261,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
     required bool isLoadingMore,
     required bool hasMore,
   }) {
+    print(role);
+
     if (users.isEmpty && !isLoadingMore) {
       return Center(
         child: Column(
@@ -380,7 +392,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                   color: AppColors.iconLightColor,
                 ),
 
-                // ---- BUILD ITEMS DYNAMICALLY ----
                 itemBuilder: (_) {
                   final items = <PopupMenuEntry<String>>[
                     const PopupMenuItem(value: 'Edit', child: Text('Edit')),
@@ -408,10 +419,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     );
                   }
 
+                  if (currentUser?.role?.toUpperCase() == 'SUPER_ADMIN' &&
+                      currentUser?.userId != user['_id']) {
+                    items.add(
+                      const PopupMenuItem(
+                        value: 'Delete',
+                        child: Text('Delete'),
+                      ),
+                    );
+                  }
+
                   return items;
                 },
 
-                // ---- YOUR SAME LOGIC BELOW ----
                 onSelected: (value) async {
                   if (value == 'Edit') {
                     MyRouter.push(screen: MyUserScreen(userData: user));
@@ -423,29 +443,45 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     listen: false,
                   );
 
-                  final (newStatus, title, msg, confirmColor) = switch (value) {
+                  final (
+                    newStatus,
+                    title,
+                    msg,
+                    confirmColor,
+                    isDelete,
+                  ) = switch (value) {
                     'Activate' => (
                       'ACTIVE',
                       'Activate User!',
                       'Are you sure you want to activate ${user['name']}?',
                       Colors.green,
+                      false,
                     ),
                     'Deactivate' => (
                       'INACTIVE',
                       'Deactivate User!',
                       'Are you sure you want to deactivate ${user['name']}?',
                       Colors.orange,
+                      false,
                     ),
                     'Block' => (
                       'BLOCKED',
                       'Block User!',
                       'Are you sure you want to block ${user['name']}?',
                       Colors.red,
+                      false,
                     ),
-                    _ => (null, '', '', Colors.orange),
+                    'Delete' => (
+                      null,
+                      'Delete User!',
+                      'Are you sure you want to permanently delete ${user['name']}?',
+                      Colors.red,
+                      true,
+                    ),
+                    _ => (null, '', '', Colors.orange, false),
                   };
 
-                  if (newStatus == null) return;
+                  if (title.isEmpty) return;
 
                   CustomConfirmationDialog.show(
                     context: context,
@@ -460,18 +496,29 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                     textColor: AppColors.textPrimary,
                     onConfirm: () async {
                       try {
-                        final ok = await sportsProvider.updateUserStatus(
-                          id: user['_id'],
-                          status: newStatus,
-                        );
+                        bool ok = false;
+
+                        if (isDelete) {
+                          ok = await sportsProvider.deleteUser(id: user['_id']);
+                          if (ok)
+                            Messenger.alertSuccess(
+                              "${user['name']} deleted successfully!",
+                            );
+                        } else {
+                          ok = await sportsProvider.updateUserStatus(
+                            id: user['_id'],
+                            status: newStatus!,
+                          );
+                          if (ok)
+                            Messenger.alertSuccess(
+                              "${user['name']} is now $newStatus.",
+                            );
+                        }
 
                         if (ok) {
-                          Messenger.alertSuccess(
-                            "${user['name']} is now $newStatus.",
-                          );
                           await _refreshCurrentTabSilently();
                         } else {
-                          Messenger.alertError("Failed to update status.");
+                          Messenger.alertError("Operation failed.");
                         }
                       } catch (e) {
                         Messenger.alertError("Error: $e");

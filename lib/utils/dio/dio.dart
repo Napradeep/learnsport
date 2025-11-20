@@ -38,6 +38,7 @@ class NetworkUtils {
 
         if (!isPublic) {
           final token = await UserPreferences.getToken();
+          print(token);
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -45,6 +46,7 @@ class NetworkUtils {
 
         log("➡️ [${options.method}] ${options.uri}");
         if (options.data != null) log("📦 Data: ${options.data}");
+        
 
         return handler.next(options);
       },

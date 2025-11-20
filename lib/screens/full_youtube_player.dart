@@ -49,6 +49,7 @@ class _FullYoutubePlayerState extends State<FullYoutubePlayer> {
           backgroundColor: Colors.white,
 
           appBar: AppBar(
+             centerTitle: false,
             backgroundColor: AppColors.bluePrimaryDual,
             elevation: 0,
             automaticallyImplyLeading: true,

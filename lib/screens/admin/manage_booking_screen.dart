@@ -1273,6 +1273,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
       ),
       child: Scaffold(
         appBar: AppBar(
+           centerTitle: false,
           title: Text(
             isPaid ? 'Receipt' : 'Payment Invoice',
             style: const TextStyle(

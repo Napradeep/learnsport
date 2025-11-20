@@ -76,7 +76,7 @@ class _AdminScreenState extends State<AdminScreen> {
           title: 'Manage Users',
           icon: Icons.people_alt_outlined,
           color: Colors.orangeAccent,
-          onTap: () => MyRouter.push(screen: const ManageUsersScreen()),
+          onTap: () => MyRouter.push(screen:  ManageUsersScreen()),
         ),
 
         AdminCardData(
@@ -103,6 +103,7 @@ class _AdminScreenState extends State<AdminScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+         centerTitle: false,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 4,
         backgroundColor: AppColors.bluePrimaryDual,

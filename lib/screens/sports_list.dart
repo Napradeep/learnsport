@@ -84,6 +84,7 @@ class _SportsListState extends State<SportsList>
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
+           centerTitle: false,
           elevation: 0,
           backgroundColor: AppColors.bluePrimaryDual,
           foregroundColor: Colors.white,
@@ -137,7 +138,7 @@ class _SportsListState extends State<SportsList>
                     final sport = provider.sports[index];
                     final String id = sport['_id'] ?? '';
                     final String name = sport['name'] ?? 'Sport';
-                    final String? img = sport['image'];
+                    final String? img = sport['banner'] ?? sport['web_banner'];
                     final String status = (sport['status'] ?? "AVAILABLE")
                         .toString();
                     final bool isUnavailable =

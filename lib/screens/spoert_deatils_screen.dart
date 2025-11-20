@@ -80,6 +80,7 @@ class _SportDetailScreenState extends State<SportDetailScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+         centerTitle: false,
         foregroundColor: Colors.white,
         title: Text(widget.title, style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.bluePrimaryDual,
